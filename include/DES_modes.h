@@ -3,7 +3,7 @@
 
 /*
 // פונקציות כלליות
-void add_padding_and_encrypt(uint8_t *buffer, size_t bytes_read, uint64_t key, FILE *output);
+void add_padding(uint8_t *buffer, size_t bytes_read, uint64_t *block);
 void remove_padding(uint8_t *buffer, size_t *bytes_read);
 */
 // פונקציות עבור מצב ECB

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 void add_padding(uint8_t *buffer, size_t bytes_read, uint64_t *block) {
 	size_t padding = 8 - bytes_read;
@@ -65,7 +66,7 @@ void encrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 void decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
-	uint8_t buffer[8] = {0};
+	uint8_t buffer[8];
 	uint64_t ciphertext = 0, decrypted_block;
 	size_t bytes_read;
 	size_t numOfBlocks;
@@ -97,6 +98,107 @@ void decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 	}
 	fread(&ciphertext, sizeof(uint64_t), 1, input);
 	DES_decrypt(ciphertext, &decrypted_block, key);
+	memcpy(buffer, &decrypted_block ,8);
+
+	// קריאת הבלוק האחרון והסרת הפדינג
+	remove_padding(buffer, &bytes_read);
+	fwrite(buffer, 1, bytes_read, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}
+
+void encrypt_file_CBC(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+	FILE* output;
+	uint8_t buffer[8];
+	uint64_t block, ciphertext;
+	size_t bytes_read;
+	size_t i;
+	uint8_t iv[8];
+
+	// פתיחת קובץ קלט לקריאה
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	srand(time(NULL));
+	for (i = 0; i < 8; i++) {
+		iv[i] = rand() % 256;
+	}
+	memcpy(&ciphertext, iv, 8);
+	fwrite(&ciphertext, sizeof(uint64_t), 1, output);
+
+	while ((bytes_read = fread(buffer, 1, 8, input)) == 8) {
+		memcpy(&block, buffer, 8);
+		block ^= ciphertext;
+		DES_encrypt(block, &ciphertext, key);
+		fwrite(&ciphertext, sizeof(uint64_t), 1, output);
+	}
+
+	// טיפול בפדינג
+	add_padding(buffer, bytes_read, &block);
+	block ^= ciphertext;
+	DES_encrypt(block, &ciphertext, key);
+	fwrite(&ciphertext, sizeof(uint64_t), 1, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}
+
+void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+	FILE* output;
+	uint8_t buffer[8];
+	uint64_t ciphertext = 0, decrypted_block;
+	size_t bytes_read;
+	size_t numOfBlocks;
+	uint64_t iv;
+
+	// פתיחת קובץ קלט לקריאה
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	fread(&iv, sizeof(uint64_t), 1, input);
+
+	fseek(input, 0, SEEK_END);
+	numOfBlocks = ftell(input) / 8 - 1;
+	fseek(input, sizeof(uint64_t), SEEK_SET);
+
+	// קריאה ופעולה על כל הבלוקים חוץ מהאחרון
+	while (fread(&ciphertext, sizeof(uint64_t), 1, input) == 1 && numOfBlocks > 1) {
+		numOfBlocks--;
+		DES_decrypt(ciphertext, &decrypted_block, key);
+		decrypted_block ^= iv;
+		iv = ciphertext;
+		fwrite(&decrypted_block, sizeof(uint64_t), 1, output);
+	}
+	fread(&ciphertext, sizeof(uint64_t), 1, input);
+	DES_decrypt(ciphertext, &decrypted_block, key);
+	decrypted_block ^= iv;
 	memcpy(buffer, &decrypted_block ,8);
 
 	// קריאת הבלוק האחרון והסרת הפדינג

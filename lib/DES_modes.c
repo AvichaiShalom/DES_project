@@ -310,3 +310,106 @@ void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 	fclose(input);
 	fclose(output);
 }
+
+void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+	FILE* output;
+	uint8_t buffer[8];
+	uint64_t block, ciphertext, iv;
+	size_t bytes_read;
+	size_t i;
+	uint8_t ivFirstVsl[8];
+
+	// פתיחת קובץ קלט לקריאה
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	srand(time(NULL));
+	for (i = 0; i < 8; i++) {
+		ivFirstVsl[i] = rand() % 256;
+	}
+
+	memcpy(&iv, ivFirstVsl, 8);
+	fwrite(&iv, sizeof(uint64_t), 1, output);
+
+	while ((bytes_read = fread(buffer, 1, 8, input)) == 8) {
+		DES_encrypt(iv, &ciphertext, key);
+		iv = ciphertext;
+		memcpy(&block, buffer, 8);
+		block ^= iv;
+		fwrite(&block, sizeof(uint64_t), 1, output);
+	}
+
+	// טיפול בפדינג
+	DES_encrypt(iv, &ciphertext, key);
+	add_padding(buffer, bytes_read, &block);
+	block ^= iv;
+	fwrite(&block, sizeof(uint64_t), 1, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}
+
+void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+	FILE* output;
+	uint8_t buffer[8];
+	uint64_t ciphertext = 0, encIV;
+	size_t bytes_read;
+	size_t numOfBlocks;
+	uint64_t iv;
+
+	// פתיחת קובץ קלט לקריאה
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	fread(&iv, sizeof(uint64_t), 1, input);
+
+	fseek(input, 0, SEEK_END);
+	numOfBlocks = ftell(input) / 8 - 1;
+	fseek(input, sizeof(uint64_t), SEEK_SET);
+
+	while (fread(&ciphertext, sizeof(uint64_t), 1, input) == 1 && numOfBlocks > 1) {
+		numOfBlocks--;
+		DES_encrypt(iv, &encIV, key);
+		ciphertext ^= encIV;
+		iv = encIV;
+		fwrite(&ciphertext, sizeof(uint64_t), 1, output);
+	}
+
+	fread(&ciphertext, sizeof(uint64_t), 1, input);
+	DES_encrypt(iv, &encIV, key);
+	ciphertext ^= encIV;
+	memcpy(buffer, &ciphertext ,8);
+
+	// קריאת הבלוק האחרון והסרת הפדינג
+	remove_padding(buffer, &bytes_read);
+	fwrite(buffer, 1, bytes_read, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}

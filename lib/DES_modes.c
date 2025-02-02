@@ -209,3 +209,104 @@ void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 	fclose(input);
 	fclose(output);
 }
+
+void encrypt_file_CFB(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+	FILE* output;
+	uint8_t buffer[8];
+	uint64_t block, ciphertext;
+	size_t bytes_read;
+	size_t i;
+	uint8_t iv[8];
+
+	// פתיחת קובץ קלט לקריאה
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	srand(time(NULL));
+	for (i = 0; i < 8; i++) {
+		iv[i] = rand() % 256;
+	}
+	memcpy(&block, iv, 8);
+	fwrite(&block, sizeof(uint64_t), 1, output);
+
+	while ((bytes_read = fread(buffer, 1, 8, input)) == 8) {
+		DES_encrypt(block, &ciphertext, key);
+		memcpy(&block, buffer, 8);
+		block ^= ciphertext;
+		fwrite(&block, sizeof(uint64_t), 1, output);
+	}
+
+	// טיפול בפדינג
+	DES_encrypt(block, &ciphertext, key);
+	add_padding(buffer, bytes_read, &block);
+	block ^= ciphertext;
+	fwrite(&block, sizeof(uint64_t), 1, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}
+
+void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+	FILE* output;
+	uint8_t buffer[8];
+	uint64_t ciphertext = 0, decrypted_block;
+	size_t bytes_read;
+	size_t numOfBlocks;
+	uint64_t last_block;
+
+	// פתיחת קובץ קלט לקריאה
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	fread(&last_block, sizeof(uint64_t), 1, input);
+
+	fseek(input, 0, SEEK_END);
+	numOfBlocks = ftell(input) / 8 - 1;
+	fseek(input, sizeof(uint64_t), SEEK_SET);
+
+	while (fread(&ciphertext, sizeof(uint64_t), 1, input) == 1 && numOfBlocks > 1) {
+		numOfBlocks--;
+		DES_encrypt(last_block, &decrypted_block, key);
+		decrypted_block ^= ciphertext;
+		last_block = ciphertext;
+		fwrite(&decrypted_block, sizeof(uint64_t), 1, output);
+	}
+
+	fread(&ciphertext, sizeof(uint64_t), 1, input);
+	DES_encrypt(last_block, &decrypted_block, key);
+	decrypted_block ^= ciphertext;
+	memcpy(buffer, &decrypted_block ,8);
+
+	// קריאת הבלוק האחרון והסרת הפדינג
+	remove_padding(buffer, &bytes_read);
+	fwrite(buffer, 1, bytes_read, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}

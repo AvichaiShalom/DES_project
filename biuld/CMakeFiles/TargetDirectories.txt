@@ -1,0 +1,4 @@
+C:/Users/avich/Desktop/DES_project/biuld/CMakeFiles/crypto.dir
+C:/Users/avich/Desktop/DES_project/biuld/CMakeFiles/DES_run.dir
+C:/Users/avich/Desktop/DES_project/biuld/CMakeFiles/ALL_BUILD.dir
+C:/Users/avich/Desktop/DES_project/biuld/CMakeFiles/ZERO_CHECK.dir

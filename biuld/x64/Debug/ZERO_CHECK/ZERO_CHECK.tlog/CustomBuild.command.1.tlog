@@ -1,0 +1,10 @@
+^C:\USERS\AVICH\DESKTOP\DES_PROJECT\BIULD\CMAKEFILES\E8A513A5C03ACEC27D16A48F522B5214\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/avich/Desktop/DES_project -BC:/Users/avich/Desktop/DES_project/biuld --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/avich/Desktop/DES_project/biuld/cryptographic_library.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -59,4 +59,8 @@ void clebsch_subkeys(uint64_t subkeys[16], uint64_t key) {
             t = clebsch_adj_lst[t][next[i]];
         }
     }
+
+    for (i = 0; i < 16; i++) {
+        subkeys[i] = new_subkeys[i];
+    }
 }

@@ -315,7 +315,7 @@ void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[8];
-	uint64_t block, ciphertext, iv;
+	uint64_t block, encIV, iv;
 	size_t bytes_read;
 	size_t i;
 	uint8_t ivFirstVsl[8];
@@ -344,15 +344,15 @@ void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	fwrite(&iv, sizeof(uint64_t), 1, output);
 
 	while ((bytes_read = fread(buffer, 1, 8, input)) == 8) {
-		DES_encrypt(iv, &ciphertext, key);
-		iv = ciphertext;
+		DES_encrypt(iv, &encIV, key);
+		iv = encIV;
 		memcpy(&block, buffer, 8);
 		block ^= iv;
 		fwrite(&block, sizeof(uint64_t), 1, output);
 	}
 
 	// טיפול בפדינג
-	DES_encrypt(iv, &ciphertext, key);
+	DES_encrypt(iv, &encIV, key);
 	add_padding(buffer, bytes_read, &block);
 	block ^= iv;
 	fwrite(&block, sizeof(uint64_t), 1, output);

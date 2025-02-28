@@ -1,5 +1,5 @@
 ﻿#include <stdint.h>
-#include "clebsch.h"
+#include "../include/clebsch.h"
 
 
 

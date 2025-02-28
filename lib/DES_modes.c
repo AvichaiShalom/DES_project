@@ -1,4 +1,4 @@
-#include "DES_block.h"
+#include "../include/DES_block.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -363,53 +363,91 @@ void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 }
 
 void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key) {
-	FILE* input;
-	FILE* output;
-	uint8_t buffer[8];
-	uint64_t ciphertext = 0, encIV;
-	size_t bytes_read;
-	size_t numOfBlocks;
-	uint64_t iv;
+    FILE* input;
+    FILE* output;
+    uint8_t buffer[8];
+    uint64_t ciphertext, plaintext, encIV;
+    size_t bytes_read;
+    uint64_t iv;
+    long file_size, blocks_count;
 
-	// פתיחת קובץ קלט לקריאה
-	input = fopen(input_file, "rb");
-	if (!input) {
-		perror("Failed to open input file");
-		exit(1);
-	}
+    // פתיחת קבצים
+    input = fopen(input_file, "rb");
+    if (!input) {
+        perror("Failed to open input file");
+        exit(1);
+    }
 
-	// פתיחת קובץ פלט לכתיבה
-	output = fopen(output_file, "wb");
-	if (!output) {
-		perror("Failed to open output file");
-		fclose(input);
-		exit(1);
-	}
+    // חישוב גודל הקובץ ומספר הבלוקים
+    fseek(input, 0, SEEK_END);
+    file_size = ftell(input);
+    fseek(input, 0, SEEK_SET);
+    
+    if (file_size <= sizeof(uint64_t)) {
+        fprintf(stderr, "Input file too small\n");
+        fclose(input);
+        exit(1);
+    }
+    
+    blocks_count = (file_size - sizeof(uint64_t)) / sizeof(uint64_t);
+    
+    // פתיחת קובץ פלט
+    output = fopen(output_file, "wb");
+    if (!output) {
+        perror("Failed to open output file");
+        fclose(input);
+        exit(1);
+    }
 
-	fread(&iv, sizeof(uint64_t), 1, input);
+    // קריאת ה-IV
+    if (fread(&iv, sizeof(uint64_t), 1, input) != 1) {
+        perror("Failed to read IV");
+        fclose(input);
+        fclose(output);
+        exit(1);
+    }
 
-	fseek(input, 0, SEEK_END);
-	numOfBlocks = ftell(input) / 8 - 1;
-	fseek(input, sizeof(uint64_t), SEEK_SET);
+    // עיבוד כל הבלוקים למעט האחרון
+    for (int i = 0; i < blocks_count - 1; i++) {
+        // קריאת בלוק מוצפן
+        if (fread(&ciphertext, sizeof(uint64_t), 1, input) != 1) {
+            perror("Failed to read ciphertext block");
+            fclose(input);
+            fclose(output);
+            exit(1);
+        }
+        
+        // הצפנת ה-IV (בדיוק כמו בהצפנה)
+        DES_encrypt(iv, &encIV, key);
+        iv = encIV;  // עדכון ה-IV לסיבוב הבא
+        
+        // XOR לקבלת טקסט רגיל
+        plaintext = ciphertext ^ encIV;
+        
+        // כתיבה לקובץ הפלט
+        fwrite(&plaintext, sizeof(uint64_t), 1, output);
+    }
 
-	while (fread(&ciphertext, sizeof(uint64_t), 1, input) == 1 && numOfBlocks > 1) {
-		numOfBlocks--;
-		DES_encrypt(iv, &encIV, key);
-		ciphertext ^= encIV;
-		iv = encIV;
-		fwrite(&ciphertext, sizeof(uint64_t), 1, output);
-	}
+    // טיפול בבלוק האחרון (עם הפדינג)
+    if (fread(&ciphertext, sizeof(uint64_t), 1, input) != 1) {
+        perror("Failed to read last ciphertext block");
+        fclose(input);
+        fclose(output);
+        exit(1);
+    }
+    
+    // הצפנת ה-IV האחרון
+    DES_encrypt(iv, &encIV, key);
+    
+    // פענוח הבלוק האחרון
+    plaintext = ciphertext ^ encIV;
+    memcpy(buffer, &plaintext, 8);
+    
+    // הסרת הפדינג והכתיבה לקובץ
+    remove_padding(buffer, &bytes_read);
+    fwrite(buffer, 1, bytes_read, output);
 
-	fread(&ciphertext, sizeof(uint64_t), 1, input);
-	DES_encrypt(iv, &encIV, key);
-	ciphertext ^= encIV;
-	memcpy(buffer, &ciphertext ,8);
-
-	// קריאת הבלוק האחרון והסרת הפדינג
-	remove_padding(buffer, &bytes_read);
-	fwrite(buffer, 1, bytes_read, output);
-
-	// סגירת קבצים
-	fclose(input);
-	fclose(output);
+    // סגירת קבצים
+    fclose(input);
+    fclose(output);
 }

@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "des_modes.h": "c"
+        "des_modes.h": "c",
+        "string.h": "c",
+        "time.h": "c"
     }
 }

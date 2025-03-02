@@ -23,5 +23,5 @@ void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key);
 
 // פונקציות עבור מצב CTR
-void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key, uint64_t counter);
-void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key, uint64_t counter);
+void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key);
+void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key);

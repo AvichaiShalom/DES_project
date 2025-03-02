@@ -406,10 +406,111 @@ void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 		plaintext = ciphertext ^ encIV;
         fwrite(&plaintext, sizeof(uint64_t), 1, output);
 	}
+	// טיפול בפדינג
 	fread(&ciphertext, sizeof(uint64_t), 1, input);
 	DES_encrypt(iv, &encIV, key);
 	plaintext = ciphertext ^ encIV;
 	memcpy(buffer, &plaintext, 8);
+	remove_padding(buffer, &bytes_read);
+	fwrite(buffer, 1, bytes_read, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}
+
+void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+    FILE* output;
+    uint8_t buffer[8];
+	uint64_t block, encCTR;
+	size_t bytes_read;
+	size_t i;
+	char nonceArr[4];
+	uint32_t nonce, counter = 0;
+
+	// פתיחת קובץ קלט לקריאה
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	srand(time(NULL));
+	for (i = 0; i < 4; i++) {
+		nonceArr[i] = rand() % 256;
+	}
+	memcpy(&nonce, nonceArr, sizeof(uint32_t));
+
+	fwrite(&nonce, sizeof(uint32_t), 1, output);
+
+	while ((bytes_read = fread(buffer, 1, 8, input)) == 8) {
+		DES_encrypt(((uint64_t)(nonce) << 32) | counter, &encCTR, key);
+		memcpy(&block, buffer, 8);
+		block ^= encCTR;
+		fwrite(&block, sizeof(uint64_t), 1, output);
+		counter++;
+	}
+	// טיפול בפדינג
+	DES_encrypt(((uint64_t)(nonce) << 32) | counter, &encCTR, key);
+	add_padding(buffer, bytes_read, &block);
+	block ^= encCTR;
+	fwrite(&block, sizeof(uint64_t), 1, output);
+
+	// סגירת קבצים
+	fclose(input);
+	fclose(output);
+}
+
+void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key) {
+	FILE* input;
+    FILE* output;
+    uint8_t buffer[8];
+	uint64_t block, encCTR;
+	size_t bytes_read;
+	uint32_t nonce, counter = 0;
+	size_t numOfBlocks;
+
+	input = fopen(input_file, "rb");
+	if (!input) {
+		perror("Failed to open input file");
+		exit(1);
+	}
+
+	// פתיחת קובץ פלט לכתיבה
+	output = fopen(output_file, "wb");
+	if (!output) {
+		perror("Failed to open output file");
+		fclose(input);
+		exit(1);
+	}
+
+	fread(&nonce, sizeof(uint32_t), 1, input);
+
+	fseek(input, 0, SEEK_END);
+	numOfBlocks = (ftell(input) - sizeof(uint32_t)) / 8;
+	fseek(input, sizeof(uint32_t), SEEK_SET);
+
+	while (fread(&block, sizeof(uint64_t), 1, input) == 1 && numOfBlocks > 1) {
+		numOfBlocks--;
+		DES_encrypt(((uint64_t)(nonce) << 32) | counter, &encCTR, key);
+		block ^= encCTR;
+        fwrite(&block, sizeof(uint64_t), 1, output);
+		counter++;
+	}
+	// טיפול בפדינג
+	fread(&block, sizeof(uint64_t), 1, input);
+	DES_encrypt(((uint64_t)(nonce) << 32) | counter, &encCTR, key);
+	block ^= encCTR;
+	memcpy(buffer, &block, 8);
 	remove_padding(buffer, &bytes_read);
 	fwrite(buffer, 1, bytes_read, output);
 

@@ -1,4 +1,5 @@
 #include "../include/DES_block.h"
+#include "../include/constants.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,13 +16,6 @@ void add_padding(uint8_t *buffer, size_t bytes_read, uint64_t *block) {
 	buffer[7] = padding;
 	
 	memcpy(block, buffer, 8);
-}
-
-void printBuffer(uint8_t *buffer) {
-	int i;
-	for (i = 0; i < 8; i++) {
-		printf("|%u|\n", buffer[i]);
-	}
 }
 
 void remove_padding(uint8_t* buffer, size_t* bytes_read) {

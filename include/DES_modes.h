@@ -1,3 +1,7 @@
+
+#ifndef DES_modes
+#define DES_modes
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -25,3 +29,5 @@ void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 // פונקציות עבור מצב CTR
 void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key);
 void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key);
+
+#endif

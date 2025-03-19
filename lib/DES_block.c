@@ -1,5 +1,6 @@
 ﻿#include <stdint.h>
-#include "../include/clebsch.h"
+#include "../include/graph.h"
+#include "../include/constants.h"
 
 
 
@@ -133,7 +134,7 @@ void initial_permutation(uint64_t data, uint64_t* permuted_data) {
 	int i;
 	*permuted_data = 0;
 	
-	for (i = 0;i < 64;i++) {
+	for (i = 0;i < BLOCK_SIZE_BITS;i++) {
 		//takes the bit in the i pos in the input and put it in the IP[i] pos in the output
 		*permuted_data |= ((data >> (IP[i] - 1)) & 1) << i;
 	}
@@ -143,27 +144,27 @@ void final_permutation(uint64_t data, uint64_t* permuted_data) {
 	int i;
 	*permuted_data = 0;
 
-	for (i = 0;i < 64;i++) {
+	for (i = 0;i < BLOCK_SIZE_BITS;i++) {
 		//takes the bit in the i pos in the input and put it in the FP[i] pos in the output
 		*permuted_data |= ((data >> (FP[i] - 1)) & 1) << i;
 	}
 }
 
-void split_blocks(uint64_t block, uint32_t* L, uint32_t* R) {
-	*R = block & 0xFFFFFFFF;
-	*L = (block & 0xFFFFFFFF00000000) >> 32;
+void split_block(uint64_t block, uint32_t* L, uint32_t* R) {
+	*R = block & RIGHT_HALF_BLOCK_ON;
+	*L = (block & RIGHT_HALF_BLOCK_ON) >> (HALF_BLOCK_SIZE_BITS);
 }
 
-void merge_blocks(uint32_t L, uint32_t R, uint64_t* block) {
+void merge_block(uint32_t L, uint32_t R, uint64_t* block) {
 	*block = R;
-	*block |= (uint64_t)(L) << 32;
+	*block |= (uint64_t)(L) << HALF_BLOCK_SIZE_BITS;
 }
 
 void permuted_choice_1(uint64_t key, uint64_t* permuted_key) {
 	int i;
 	*permuted_key = 0;
 
-	for (i = 0;i < 56;i++) {
+	for (i = 0; i < KEY_SIZE_BITS; i++) {
 		//takes the bit in the pc1[i] pos in the input and put it in the i pos in the output
 		*permuted_key |= ((key >> (PC1[i] - 1)) & 1) << i;
 	}
@@ -173,14 +174,14 @@ void permuted_choice_2(uint64_t key, uint64_t* subkey) {
 	int i;
 	*subkey = 0;
 
-	for (i = 0;i < 48;i++) {
+	for (i = 0; i < SUBKEY_SIZE_BITS; i++) {
 		//takes the bit in the pc2[i] pos in the input and put it in the i pos in the output
 		*subkey |= ((key >> (PC2[i] - 1)) & 1) << i;
 	}
 }
 
 void left_shift(uint32_t* half_key, int shift_amount) {
-	*half_key = (*half_key << shift_amount) | (*half_key >> (28 - shift_amount));
+	*half_key = (*half_key << shift_amount) | (*half_key >> (HALF_KEY_SIZE_BITS - shift_amount));
 }
 
 
@@ -191,8 +192,8 @@ void generate_subkeys(uint64_t key, uint64_t subkeys[16]) {
 	permuted_choice_1(key, &permuted_key);
 
 	// חציית המפתח לשניים
-	left = (permuted_key >> 28) & 0xFFFFFFF; // 28 ביטים שמאליים
-	right = permuted_key & 0xFFFFFFF;        // 28 ביטים ימניים
+	left = (permuted_key >> HALF_KEY_SIZE_BITS) & RIGHT_HALF_KEY_ON; // 28 ביטים שמאליים
+	right = permuted_key & RIGHT_HALF_KEY_ON;        // 28 ביטים ימניים
 
 	for (int i = 0; i < 16; i++) {
 		//פעמים shifts[i] סיבוב מעגלי שמאלה 
@@ -200,7 +201,7 @@ void generate_subkeys(uint64_t key, uint64_t subkeys[16]) {
 		left_shift(&right, shifts[i]);
 
 		// מיזוג הימני והשמאלי למפתח 56 ביטים
-		combined_key = ((uint64_t)left << 28) | right;
+		combined_key = ((uint64_t)left << HALF_KEY_SIZE_BITS) | right;
 
 		// יצירת תתי המפתחות
 		permuted_choice_2(combined_key, &subkeys[i]);
@@ -211,7 +212,7 @@ void expansion_function(uint32_t R, uint64_t* expanded_R) {
 	int i;
 	*expanded_R = 0;
 
-	for (i = 0;i < 48;i++) {
+	for (i = 0;i < SUBKEY_SIZE_BITS;i++) {
 		//takes the bit in the E[i] pos in the input and put it in the i pos in the output
 		*expanded_R |= ((R >> (E[i] - 1)) & 1) << i;
 	}
@@ -269,8 +270,9 @@ void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 
 	generate_subkeys(key, subkeys);
 	clebsch_subkeys(subkeys, key);
+
 	initial_permutation(plaintext, &plaintext);
-	split_blocks(plaintext, &L, &R);
+	split_block(plaintext, &L, &R);
 
 	for (i = 0;i < 16;i++) {
 		temp = L;
@@ -281,7 +283,7 @@ void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 	temp = L;
 	L = R;
 	R = temp;
-	merge_blocks(L, R, &plaintext);
+	merge_block(L, R, &plaintext);
 	final_permutation(plaintext, ciphertext);
 }
 
@@ -292,8 +294,9 @@ void DES_decrypt(uint64_t ciphertext, uint64_t* plaintext, uint64_t key) {
 
 	generate_subkeys(key, subkeys);
 	clebsch_subkeys(subkeys, key);
+	
 	initial_permutation(ciphertext, &ciphertext);
-	split_blocks(ciphertext, &L, &R);
+	split_block(ciphertext, &L, &R);
 
 	for (i = 15;i >= 0;i--) {
 		temp = L;
@@ -304,6 +307,6 @@ void DES_decrypt(uint64_t ciphertext, uint64_t* plaintext, uint64_t key) {
 	temp = L;
 	L = R;
 	R = temp;
-	merge_blocks(L, R, &ciphertext);
+	merge_block(L, R, &ciphertext);
 	final_permutation(ciphertext, plaintext);
 }

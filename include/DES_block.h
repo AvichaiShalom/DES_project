@@ -1,4 +1,7 @@
-﻿#include <stdint.h>  // עבור הגדרות כמו uint8_t ו-uint64_t
+﻿#ifndef DES_block
+#define DES_block
+
+#include <stdint.h>  // עבור הגדרות כמו uint8_t ו-uint64_t
 
 
 
@@ -48,3 +51,5 @@ void s_box_substitution(uint64_t input, uint32_t* output);
 // פונקציית החלפה (P) שמשמשת לאחר ה-S-Boxes להמרת הביטים
 void permutation_function(uint32_t data, uint32_t* permuted_data);
 */
+
+#endif

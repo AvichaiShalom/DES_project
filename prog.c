@@ -16,7 +16,7 @@ int isFilesTheSame(const char* file1, const char* file2) {
         // אחד הקבצים לא נמצא
         if (f1 != NULL) fclose(f1);
         if (f2 != NULL) fclose(f2);
-        return 0; // החזרת "שקר"
+        return 0; // false
     }
 
     int ch1, ch2;
@@ -24,18 +24,18 @@ int isFilesTheSame(const char* file1, const char* file2) {
         if (ch1 != ch2) {
             fclose(f1);
             fclose(f2);
-            return 0; // החזרת "שקר"
+            return 0; // false
         }
     }
 
     if (fgetc(f1) == EOF && fgetc(f2) == EOF) {
         fclose(f1);
         fclose(f2);
-        return 1; // החזרת "אמת"
+        return 1; // true
     } else {
         fclose(f1);
         fclose(f2);
-        return 0; // החזרת "שקר"
+        return 0; // false
     }
 }
 

@@ -5,6 +5,7 @@
 #define IN_FILE "..\\..\\..\\in.txt"
 #define ENC_FILE "..\\..\\..\\enc.txt"
 #define DEC_FILE "..\\..\\..\\dec.txt"
+#define KEY 0
 
 
 
@@ -62,9 +63,10 @@ int main() {
 
     return 0;
 	*/
-	encrypt_file_ECB(IN_FILE, ENC_FILE, 0);
+
+	encrypt_file_ECB(IN_FILE, ENC_FILE, KEY);
 	printf("encrypted ECB\n");
-	decrypt_file_ECB(ENC_FILE, DEC_FILE, 0);
+	decrypt_file_ECB(ENC_FILE, DEC_FILE, KEY);
 	printf("decrypted ECB\n");
 	if (isFilesTheSame(IN_FILE, DEC_FILE)) {
 		printf("\033[32m ECB passed!!! ;-) \033[0m\n");
@@ -73,9 +75,9 @@ int main() {
 	}
 	printf("\n");
 	 
-	encrypt_file_CBC(IN_FILE, ENC_FILE, 0);
+	encrypt_file_CBC(IN_FILE, ENC_FILE, KEY);
 	printf("encrypted CBC\n");
-	decrypt_file_CBC(ENC_FILE, DEC_FILE, 0);
+	decrypt_file_CBC(ENC_FILE, DEC_FILE, KEY);
 	printf("decrypted CBC\n");
 	if (isFilesTheSame(IN_FILE, DEC_FILE)) {
 		printf("\033[32m CBC passed!!! ;-) \033[0m\n");
@@ -84,9 +86,9 @@ int main() {
 	}
 	printf("\n");
 
-	encrypt_file_CFB(IN_FILE, ENC_FILE, 0);
+	encrypt_file_CFB(IN_FILE, ENC_FILE, KEY);
 	printf("encrypted CFB\n");
-	decrypt_file_CFB(ENC_FILE, DEC_FILE, 0);
+	decrypt_file_CFB(ENC_FILE, DEC_FILE, KEY);
 	printf("decrypted CFB\n");
 	if (isFilesTheSame(IN_FILE, DEC_FILE)) {
 		printf("\033[32m CFB passed!!! ;-) \033[0m\n");
@@ -95,9 +97,9 @@ int main() {
 	}
 	printf("\n");
 
-	encrypt_file_OFB(IN_FILE, ENC_FILE, 0);
+	encrypt_file_OFB(IN_FILE, ENC_FILE, KEY);
 	printf("encrypted OFB\n");
-	decrypt_file_OFB(ENC_FILE, DEC_FILE, 0);
+	decrypt_file_OFB(ENC_FILE, DEC_FILE, KEY);
 	printf("decrypted OFB\n");
 	if (isFilesTheSame(IN_FILE, DEC_FILE)) {
 		printf("\033[32m OFB passed!!! ;-) \033[0m\n");
@@ -106,9 +108,9 @@ int main() {
 	}
 	printf("\n");
 
-	encrypt_file_CTR(IN_FILE, ENC_FILE, 0);
+	encrypt_file_CTR(IN_FILE, ENC_FILE, KEY);
 	printf("encrypted CTR\n");
-	decrypt_file_CTR(ENC_FILE, DEC_FILE, 0);
+	decrypt_file_CTR(ENC_FILE, DEC_FILE, KEY);
 	printf("decrypted CTR\n");
 	if (isFilesTheSame(IN_FILE, DEC_FILE)) {
 		printf("\033[32m CTR passed!!! ;-) \033[0m\n");

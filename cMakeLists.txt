@@ -13,7 +13,7 @@ set(CMAKE_WIN32_EXECUTABLE FALSE)
 
 # Create the cryptographic library
 add_library(crypto
-    lib/clebsch.c
+    lib/graph.c
     lib/DES_block.c
     lib/DES_modes.c
     lib/user_app.c

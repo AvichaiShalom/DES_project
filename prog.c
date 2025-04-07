@@ -40,29 +40,55 @@ int isFilesTheSame(const char* file1, const char* file2) {
     }
 }
 
-int main() {
-	/*
-	uint64_t plaintext = 0x123456789ABCDEF0; // קלט לדוגמה
-    uint64_t key = 0x133457799BBCDFF1; // מפתח לדוגמה
-    uint64_t ciphertext, decrypted_plaintext;
+typedef struct {
+    uint64_t plaintext;
+    uint64_t key;
+} TestVector;
 
-    // הצפנה
-    DES_encrypt(plaintext, &ciphertext, key);
-    printf("Ciphertext: 0x%lX\n", ciphertext);
+void run_des_tests() {
+    TestVector tests[] = {
+        {0x923456789ABCDEF0, 0x133457799BBCDFF2},
+        {0x0123456789ABCDEF, 0x0F1571C947D9E859},
+        {0xFFFFFFFFFFFFFFFF, 0x0000000000000000},
+        {0x0000000000000000, 0xFFFFFFFFFFFFFFFF},
+        {0xFEDCBA9876543210, 0xAABB09182736CCDD},
+        {0xAAAAAAAAAAAAAAAA, 0x5555555555555555},
+        {0x1234567890ABCDEF, 0xCAFEBABEDEADBEEF}
+    };
 
-    // פענוח
-    DES_decrypt(ciphertext, &decrypted_plaintext, key);
-    printf("Decrypted plaintext: 0x%lX\n", decrypted_plaintext);
+    int total_tests = sizeof(tests) / sizeof(TestVector);
+    int passed_tests = 0;
 
-    // בדיקה אם הפענוח תואם לקלט המקורי
-    if (plaintext == decrypted_plaintext) {
-        printf("DES test passed!\n");
-    } else {
-        printf("DES test failed!\n");
+    printf("Running %d DES test vectors...\n\n", total_tests);
+
+    for (int i = 0; i < total_tests; i++) {
+        uint64_t ciphertext = 0;
+        uint64_t decrypted_plaintext = 0;
+
+        DES_encrypt(tests[i].plaintext, &ciphertext, tests[i].key);
+        DES_decrypt(ciphertext, &decrypted_plaintext, tests[i].key);
+
+        printf("Test #%d\n", i + 1);
+        printf("  Plaintext:  0x%016lX\n", tests[i].plaintext);
+        printf("  Key:        0x%016lX\n", tests[i].key);
+        printf("  Ciphertext: 0x%016lX\n", ciphertext);
+        printf("  Decrypted:  0x%016lX\n", decrypted_plaintext);
+
+        if (tests[i].plaintext == decrypted_plaintext) {
+            printf("  Result:     PASS\n\n");
+            passed_tests++;
+        } else {
+            printf("  Result:     FAIL\n\n");
+        }
     }
 
-    return 0;
-	*/
+    printf("Summary: %d/%d tests passed.\n", passed_tests, total_tests);
+}
+
+int main() {
+	run_des_tests();
+	return 0;
+	
 
 	encrypt_file_ECB(IN_FILE, ENC_FILE, KEY);
 	printf("encrypted ECB\n");

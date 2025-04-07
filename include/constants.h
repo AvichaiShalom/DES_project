@@ -9,6 +9,9 @@
 #define SUBKEY_SIZE_BITS 48
 #define HALF_KEY_SIZE_BITS 28
 #define RIGHT_HALF_KEY_ON 0xFFFFFFF
+#define S_BOXES_COUNT 8
+#define S_BOXES_ROWS 4
+#define S_BOXES_COLS 16
 
 #define BLOCK_SIZE_BYTES 8
 #define INT_32_BITS 32

@@ -5,6 +5,8 @@
         "time.h": "c",
         "stdint.h": "c",
         "des_block.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "constants.h": "c",
+        "graph.h": "c"
     }
 }

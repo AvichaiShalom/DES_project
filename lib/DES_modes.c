@@ -97,7 +97,6 @@ void decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 		DES_decrypt(ciphertext, &decrypted_block, key);
 		fwrite(&decrypted_block, BLOCK_SIZE_BYTES, 1, output);
 	}
-	fread(&ciphertext, BLOCK_SIZE_BYTES, 1, input);
 	DES_decrypt(ciphertext, &decrypted_block, key);
 	memcpy(buffer, &decrypted_block ,BLOCK_SIZE_BYTES);
 
@@ -183,7 +182,12 @@ void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 		exit(1);
 	}
 
-	fread(&iv, BLOCK_SIZE_BYTES, 1, input);
+	if(fread(&iv, BLOCK_SIZE_BYTES, 1, input) != 1) {
+		perror("could not read IV");
+		fclose(input);
+		fclose(output);
+		exit(1);
+	}
 
 	fseek(input, 0, SEEK_END);
 	numOfBlocks = ftell(input) / BLOCK_SIZE_BYTES - 1;
@@ -197,7 +201,7 @@ void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 		iv = ciphertext;
 		fwrite(&decrypted_block, BLOCK_SIZE_BYTES, 1, output);
 	}
-	fread(&ciphertext, BLOCK_SIZE_BYTES, 1, input);
+	
 	DES_decrypt(ciphertext, &decrypted_block, key);
 	decrypted_block ^= iv;
 	memcpy(buffer, &decrypted_block ,8);
@@ -284,7 +288,12 @@ void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 		exit(1);
 	}
 
-	fread(&last_block, BLOCK_SIZE_BYTES, 1, input);
+	if(fread(&last_block, BLOCK_SIZE_BYTES, 1, input) != 1) {
+		perror("could not read IV");
+		fclose(input);
+		fclose(output);
+		exit(1);
+	}
 
 	fseek(input, 0, SEEK_END);
 	numOfBlocks = ftell(input) / BLOCK_SIZE_BYTES - 1;
@@ -298,7 +307,6 @@ void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 		fwrite(&decrypted_block, BLOCK_SIZE_BYTES, 1, output);
 	}
 
-	fread(&ciphertext, BLOCK_SIZE_BYTES, 1, input);
 	DES_encrypt(last_block, &decrypted_block, key);
 	decrypted_block ^= ciphertext;
 	memcpy(buffer, &decrypted_block ,BLOCK_SIZE_BYTES);
@@ -387,7 +395,12 @@ void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 		exit(1);
 	}
 
-	fread(&iv, BLOCK_SIZE_BYTES, 1, input);
+	if(fread(&iv, BLOCK_SIZE_BYTES, 1, input) != 1) {
+		perror("could not read IV");
+		fclose(input);
+		fclose(output);
+		exit(1);
+	}
 
 	fseek(input, 0, SEEK_END);
 	numOfBlocks = ftell(input) / BLOCK_SIZE_BYTES - 1;
@@ -401,7 +414,6 @@ void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
         fwrite(&plaintext, BLOCK_SIZE_BYTES, 1, output);
 	}
 	// טיפול בפדינג
-	fread(&ciphertext, BLOCK_SIZE_BYTES, 1, input);
 	DES_encrypt(iv, &encIV, key);
 	plaintext = ciphertext ^ encIV;
 	memcpy(buffer, &plaintext, BLOCK_SIZE_BYTES);
@@ -487,7 +499,12 @@ void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 		exit(1);
 	}
 
-	fread(&nonce, INT_4_BYTES, 1, input);
+	if(fread(&nonce, INT_4_BYTES, 1, input) != 1) {
+		perror("could not read nonce");
+		fclose(input);
+		fclose(output);
+		exit(1);
+	}
 
 	fseek(input, 0, SEEK_END);
 	numOfBlocks = (ftell(input) - INT_4_BYTES) / BLOCK_SIZE_BYTES;
@@ -501,7 +518,6 @@ void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 		counter++;
 	}
 	// טיפול בפדינג
-	fread(&block, BLOCK_SIZE_BYTES, 1, input);
 	DES_encrypt(((uint64_t)(nonce) << INT_32_BITS) | counter, &encCTR, key);
 	block ^= encCTR;
 	memcpy(buffer, &block, BLOCK_SIZE_BYTES);

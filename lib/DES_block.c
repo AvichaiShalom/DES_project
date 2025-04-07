@@ -1,4 +1,5 @@
 ﻿#include <stdint.h>
+#include <stdlib.h>
 #include "../include/graph.h"
 #include "../include/constants.h"
 
@@ -269,7 +270,6 @@ void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 	int i;
 
 	generate_subkeys(key, subkeys);
-	clebsch_subkeys(subkeys, key);
 	initial_permutation(plaintext, &plaintext);
 	split_blocks(plaintext, &L, &R);
 
@@ -292,7 +292,6 @@ void DES_decrypt(uint64_t ciphertext, uint64_t* plaintext, uint64_t key) {
 	int i;
 
 	generate_subkeys(key, subkeys);
-	clebsch_subkeys(subkeys, key);
 	initial_permutation(ciphertext, &ciphertext);
 	split_blocks(ciphertext, &L, &R);
 

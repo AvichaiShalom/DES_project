@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "DES_modes.h"
 #include "DES_block.h"
+#include "graph.h"
 #define IN_FILE "..\\..\\..\\in.txt"
 #define ENC_FILE "..\\..\\..\\enc.txt"
 #define DEC_FILE "..\\..\\..\\dec.txt"
@@ -53,7 +54,15 @@ void run_des_tests() {
         {0x0000000000000000, 0xFFFFFFFFFFFFFFFF},
         {0xFEDCBA9876543210, 0xAABB09182736CCDD},
         {0xAAAAAAAAAAAAAAAA, 0x5555555555555555},
-        {0x1234567890ABCDEF, 0xCAFEBABEDEADBEEF}
+        {0x1234567890ABCDEF, 0xCAFEBABEDEADBEEF},
+        {0x0000000000000001, 0x1234567890ABCDEF},
+        {0x1111111111111111, 0x0F0F0F0F0F0F0F0F},
+        {0x2222222222222222, 0x1A2B3C4D5E6F7A8B},
+        {0x3333333333333333, 0x4E5F6D7C8A9B0F1C},
+        {0x4444444444444444, 0x9876543210ABCDEF},
+        {0x5555555555555555, 0x1F2E3D4C5B6A7E8F},
+        {0x6666666666666666, 0xABCDEF0123456789},
+        {0x7777777777777777, 0x12345ABCDE987654}
     };
 
     int total_tests = sizeof(tests) / sizeof(TestVector);
@@ -85,8 +94,69 @@ void run_des_tests() {
     printf("Summary: %d/%d tests passed.\n", passed_tests, total_tests);
 }
 
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define S_BOXES_COUNT 8
+#define S_BOXES_ROWS 4
+#define S_BOXES_COLS 16
+
+int validate_row(int row[S_BOXES_COLS]) {
+    int seen[S_BOXES_COLS] = {0};
+    for (int i = 0; i < S_BOXES_COLS; i++) {
+        int val = row[i];
+        if (val < 0 || val >= S_BOXES_COLS) return 0; // ערך מחוץ לתחום
+        if (seen[val]) return 0; // הופיע פעמיים
+        seen[val] = 1;
+    }
+    return 1; // השורה תקינה
+}
+
+int validate_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
+    for (int i = 0; i < S_BOXES_COUNT; i++) {
+        for (int j = 0; j < S_BOXES_ROWS; j++) {
+            if (!validate_row(sboxes[i][j])) {
+                printf("Error in S-Box %d, row %d: not a valid permutation\n", i + 1, j);
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+int compare_sboxes(int a[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS], int b[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
+    return memcmp(a, b, sizeof(int) * S_BOXES_COUNT * S_BOXES_ROWS * S_BOXES_COLS) == 0;
+}
+
+void test_sbox_generation() {
+    int sboxes1[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS];
+    int sboxes2[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS];
+
+    srand(0xDEADBEEF); // מפתח לדוגמה
+    generate_sboxes(sboxes1);
+
+    srand(0xDEADBEEF); // אותו מפתח שוב
+    generate_sboxes(sboxes2);
+
+    if (!validate_sboxes(sboxes1)) {
+        printf("Validation failed: S-Boxes contain invalid rows\n");
+        return;
+    }
+
+    if (!compare_sboxes(sboxes1, sboxes2)) {
+        printf("Validation failed: S-Boxes not deterministic\n");
+        return;
+    }
+
+    printf("S-Box generation test passed!\n");
+}
+
+
 int main() {
-	run_des_tests();
+    //test_sbox_generation();
+    run_des_tests();
 	return 0;
 	
 

@@ -40,6 +40,7 @@ int E[] = {
 };
 
 // S-boxes (Substitution Boxes) - 8 טבלאות חלפה כל אחת ממירה 6 ביט ל-4 ביט
+/*
 int S_BOX[8][4][16] = {
 	{ // S1
 		{14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7},
@@ -90,7 +91,7 @@ int S_BOX[8][4][16] = {
 		{2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11}
 	}
 };
-
+*/
 // Permutation (P) table - מבצעת שחלוף אחרי ה-S-boxes
 int P[] = {
 	16, 7, 20, 21,
@@ -219,7 +220,7 @@ void expansion_function(uint32_t R, uint64_t* expanded_R) {
 	}
 }
 
-void s_box_substitution(uint64_t input, uint32_t* output) {
+void s_box_substitution(uint64_t input, uint32_t* output, int S_BOX[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
 	uint8_t six_bits, row, col, s_box_value;
 	int i;
 	*output = 0;
@@ -253,13 +254,13 @@ void permutation_function(uint32_t data, uint32_t* permuted_data) {
 	}
 }
 
-void f_function(uint32_t R, uint64_t subkey, uint32_t* f_result) {
+void f_function(uint32_t R, uint64_t subkey, uint32_t* f_result, int S_BOX[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
 	uint64_t expanded_R;
 	uint32_t res;
 
 	expansion_function(R, &expanded_R);
 	expanded_R ^= subkey;
-	s_box_substitution(expanded_R, &res);
+	s_box_substitution(expanded_R, &res, S_BOX);
 	permutation_function(res, &res);
 	*f_result = res;
 }
@@ -268,6 +269,9 @@ void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 	uint32_t L, R, temp;
 	uint64_t subkeys[16];
 	int i;
+	int S_BOX[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS];
+	srand(key);
+	generate_sboxes(S_BOX);
 
 	generate_subkeys(key, subkeys);
 	initial_permutation(plaintext, &plaintext);
@@ -276,7 +280,7 @@ void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 	for (i = 0;i < 16;i++) {
 		temp = L;
 		L = R;
-		f_function(R, subkeys[i], &R);
+		f_function(R, subkeys[i], &R, S_BOX);
 		R ^= temp;
 	}
 	temp = L;
@@ -290,6 +294,9 @@ void DES_decrypt(uint64_t ciphertext, uint64_t* plaintext, uint64_t key) {
 	uint32_t L, R, temp;
 	uint64_t subkeys[16];
 	int i;
+	int S_BOX[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS];
+	srand(key);
+	generate_sboxes(S_BOX);
 
 	generate_subkeys(key, subkeys);
 	initial_permutation(ciphertext, &ciphertext);
@@ -298,7 +305,7 @@ void DES_decrypt(uint64_t ciphertext, uint64_t* plaintext, uint64_t key) {
 	for (i = 15;i >= 0;i--) {
 		temp = L;
 		L = R;
-		f_function(R, subkeys[i], &R);
+		f_function(R, subkeys[i], &R, S_BOX);
 		R ^= temp;
 	}
 	temp = L;

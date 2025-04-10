@@ -273,6 +273,8 @@ void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 	srand(key);
 	generate_sboxes(S_BOX);
 
+	print_sboxes(S_BOX);
+
 	generate_subkeys(key, subkeys);
 	initial_permutation(plaintext, &plaintext);
 	split_blocks(plaintext, &L, &R);

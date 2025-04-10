@@ -44,6 +44,7 @@ int** get_AGraph_adj_lst() {
     return AGraph_adj_lst;
 }
 
+
 int** get_clebsch_adj_lst() {
     int clebsch_adj_lst[16][5] = {
         {1, 4, 7, 9, 11},
@@ -67,13 +68,25 @@ int** get_clebsch_adj_lst() {
 }
 */
 
+typedef struct Graph {
+    int id;
+    struct Graph* neighbors[CLEBSCH_NEIGHBORS];
+} Graph;
 
-
-//working with clebsch graph
+void init_graph(Graph *nodes, int adjacency[V][CLEBSCH_NEIGHBORS]) {
+    int i, j;
+    for (i = 0; i < V; i++) {
+        nodes[i].id = i;
+        for (j = 0; j < CLEBSCH_NEIGHBORS; j++) {
+            nodes[i].neighbors[j] = &nodes[adjacency[i][j]];
+        }
+    }
+}
 
 // פונקציה לערבוב רשימת שכנים
-void shuffle(int array[], int n) {
-    int i, j, temp;
+void shuffle(Graph* array[], int n) {
+    int i, j;
+    Graph* temp;
     for (i = n - 1; i > 0; i--) {
         j = rand() % (i + 1);
         temp = array[i];
@@ -83,11 +96,51 @@ void shuffle(int array[], int n) {
 }
 
 // בקטרקינג למציאת מסלול בגרף קלבש
-int backtrack(int visited[V], int path[V], int current, int step) {
-    // יצירת עותק של רשימת השכנים וערבובה
-    int neighbors[CLEBSCH_NEIGHBORS];
+int backtrack(Graph *nodes, int visited[V], int path[V], int current, int step) {
+    // אם עברנו בכל הצמתים, אז מצאנו מסלול
+    if (step == V) return true;
+
+    // עבור כל שכן של הצומת הנוכחי
+    for (int i = 0; i < CLEBSCH_NEIGHBORS; i++) {
+        int next = nodes[current].neighbors[i]->id;  // ניגש לשכן מתוך המצביע
+
+        // אם השכן לא בוקר עדיין
+        if (!visited[next]) {
+            visited[next] = 1;  // סימן את השכן כביקרנו בו
+            path[step] = next;  // עדכון המסלול
+            if (backtrack(nodes, visited, path, next, step + 1)) return true; // חזרה אם הצלחנו
+            visited[next] = 0;  // חזרה אחורה אם לא הצלחנו
+        }
+    }
+
+    return false;  // אם לא מצאנו מסלול
+}
+
+// פונקציה להפקת מסלול רנדומלי
+void generate_path(Graph *nodes, int path[V]) {
+    int start;
     int i;
-    int next;
+    int visited[V] = {0};
+    
+    // בוחרים צומת התחלתי שונה כל פעם
+    start = rand() % V;
+    visited[start] = 1;
+    path[0] = start;
+
+    for (i = 0; i < V; i++) {
+        shuffle(nodes[i].neighbors, CLEBSCH_NEIGHBORS);
+    }
+
+    if (!backtrack(nodes, visited, path, start, 1))
+    {
+        perror("could not generate sBoxes");
+        exit(1);
+    }
+}
+
+// פונקציה להפקת כל המסלולים לכל S-Box
+void generate_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
+    Graph nodes[V];
     int clebsch_adj_lst[16][5] = {
         {1, 4, 7, 9, 11},
         {0, 2, 5, 8, 12},
@@ -106,48 +159,10 @@ int backtrack(int visited[V], int path[V], int current, int step) {
         {3, 8, 9, 11, 12},
         {5, 6, 7, 8, 9}
     };
-    if (step == V) return true; // אם עברנו בכל הצמתים
-
-    for (i = 0; i < CLEBSCH_NEIGHBORS; i++) {
-        neighbors[i] = clebsch_adj_lst[current][i];
-    }
-    shuffle(neighbors, CLEBSCH_NEIGHBORS); // ערבוב השכנים כדי להוסיף רנדומליות
-
-    // חיפוש צומת שלא ביקרנו בו עדיין
-    for (i = 0; i < CLEBSCH_NEIGHBORS; i++) {
-        next = neighbors[i];
-        if (!visited[next]) {
-            visited[next] = 1;
-            path[step] = next;
-            if (backtrack(visited, path, next, step + 1)) return true;
-            visited[next] = 0; // חזרה אחורה אם לא הצלחנו
-        }
-    }
-
-    return false;
-}
-
-// פונקציה להפקת מסלול רנדומלי
-void generate_path(int path[V]) {
-    int start;
-    int visited[V] = {0};
-    
-    // בוחרים צומת התחלתי שונה כל פעם
-    start = rand() % V;
-    visited[start] = 1;
-    path[0] = start;
-
-    if (!backtrack(visited, path, start, 1)) {
-        perror("could not generate sBoxes");
-        exit(1);
-    }
-}
-
-// פונקציה להפקת כל המסלולים לכל S-Box
-void generate_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
+    init_graph(nodes, clebsch_adj_lst);
     for (int i = 0; i < S_BOXES_COUNT; i++) { // יצירת 8 תיבות S-Box
         for (int j = 0; j < S_BOXES_ROWS; j++) { // לכל S-Box יש 4 מסלולים
-            generate_path(sboxes[i][j]); // מייצר מסלול רנדומלי
+            generate_path(nodes, sboxes[i][j]); // מייצר מסלול רנדומלי
         }
     }
 }
@@ -164,6 +179,33 @@ void print_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
         printf("\n");
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

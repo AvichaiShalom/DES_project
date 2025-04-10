@@ -16,7 +16,7 @@
 #define S_BOXES_COLS 16
 
 void generate_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]);
-void complexify_subkeys(int subkeys[V]);
+void complexify_subkeys(uint64_t subkeys[V]);
 void print_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]);
 
 #endif

@@ -10,7 +10,7 @@
     <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\DES_modes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\user_app.c">
+    <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\DES_api.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\key_generation.c">

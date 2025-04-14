@@ -6,6 +6,7 @@
 #define V 16
 #define AGRAPH_NEIGHBORS 2
 #define CLEBSCH_NEIGHBORS 5
+#define INT_MAX 2147483647
 #define INF 2147483647
 
 #define true 1

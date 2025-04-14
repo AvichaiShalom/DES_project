@@ -3,6 +3,7 @@
 #include "DES_modes.h"
 #include "DES_block.h"
 #include "graph.h"
+#include "DES_api.h"
 #define IN_FILE "..\\..\\..\\in.txt"
 #define ENC_FILE "..\\..\\..\\enc.txt"
 #define DEC_FILE "..\\..\\..\\dec.txt"
@@ -155,6 +156,78 @@ void test_sbox_generation() {
 
 
 int main() {
+    char *out;
+    int out_len;
+    run_DES_operation(
+        "0123456789ABCDEF", // key
+        0,                  // mode (ECB)
+        0,                  // encrypt
+        1,                  // text input
+        NULL,               // input_file
+        "hello world",      // input_text
+        strlen("hello world"), // size_of_input_text
+        NULL,               // output_file_name
+        &out,               // output_text
+        &out_len            // size_of_output_text
+    );
+    for (int i = 0; i < out_len; i++) {
+        printf("%c", out[i]);
+    }
+    printf("\n%d\n", out_len);
+
+    char *decrypted;
+    int decrypted_len;
+    
+    run_DES_operation(
+        "0123456789ABCDEF",  // אותו מפתח
+        0,                   // ECB
+        1,                   // פענוח
+        1,                   // קלט מטקסט
+        NULL,                // אין קובץ קלט
+        out,                 // הטקסט המוצפן ב-hex
+        strlen(out),         // גודל הטקסט (hex)
+        NULL,                // אין קובץ פלט
+        &decrypted,          // מצביע לתוצאה
+        &decrypted_len       // גודל הפלט
+    );
+    
+    // הדפסת הטקסט המפוענח
+    printf("Decrypted: ");
+    for (int i = 0; i < decrypted_len; i++) {
+        printf("%c", decrypted[i]);
+    }
+    printf("\n");
+
+    run_DES_operation(
+        "0123456789ABCDEF", // המפתח
+        0,                  // ECB
+        0,                  // הצפנה
+        0,                  // קלט מקובץ
+        IN_FILE,            // <<< תחליף בשם של קובץ הקלט
+        NULL,               // לא צריך טקסט קלט
+        0,                  // לא רלוונטי
+        ENC_FILE,           // <<< תן שם לקובץ המוצפן
+        NULL,               // לא צריך פלט לטקסט
+        NULL                // לא צריך גודל פלט
+    );
+
+    run_DES_operation(
+        "0123456789ABCDEF",   // אותו מפתח
+        0,                    // ECB
+        1,                    // פענוח
+        0,                    // קלט מקובץ
+        ENC_FILE, // <<< זה הקובץ המוצפן שיצרת למעלה
+        NULL,                 // אין טקסט קלט
+        0,                    // לא רלוונטי
+        DEC_FILE, // <<< תן שם לקובץ שיקבל את הפלט
+        NULL,                 // לא צריך פלט לטקסט
+        NULL                  // לא צריך גודל פלט
+    );
+
+    return 0;
+
+
+
     //test_sbox_generation();
     run_des_tests();
 	return 0;

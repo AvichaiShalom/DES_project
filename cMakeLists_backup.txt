@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.27.1)
 project(cryptographic_library)
-
+# Set the compiler and its version
+set(CMAKE_CXX_COMPILER_ID "gcc")
+message("Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
+message("Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
 # Set C standard
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -8,46 +11,32 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # מבטל בניית יישום GUI בחלונות
 set(CMAKE_WIN32_EXECUTABLE FALSE)
 
-# Create the cryptographic shared library (DLL)
-add_library(crypto SHARED
+# Create the cryptographic library
+add_library(crypto
     lib/graph.c
     lib/DES_block.c
     lib/DES_modes.c
     lib/DES_api.c
     lib/key_generation.c
 )
-
 # Set include directories for the library
 target_include_directories(crypto
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include
 )
-
-# Define export macro for Windows
-target_compile_definitions(crypto
-    PRIVATE BUILDING_CRYPTO_DLL
-)
-
 # Create test executable
 add_executable(DES_run
     prog.c
 )
-
 # Link test executable with the cryptographic library
 target_link_libraries(DES_run
     PRIVATE
         crypto
 )
-
 # Set output directories
-set_target_properties(DES_run
+set_target_properties(DES_run crypto
     PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-set_target_properties(crypto
-    PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"   # dll goes here
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"   # .lib (import lib)
-        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )

@@ -116,6 +116,89 @@ int backtrack(Graph *nodes, int visited[V], int path[V], int current, int step) 
     return false;  // אם לא מצאנו מסלול
 }
 
+int **allocate_matrix(int rows, int cols) {
+    int **matrix = malloc(rows * sizeof(int *));
+    if (!matrix) {
+        perror("Failed to allocate row pointers");
+        exit(1);
+    }
+    for (int i = 0; i < rows; i++) {
+        matrix[i] = malloc(cols * sizeof(int));
+        if (!matrix[i]) {
+            perror("Failed to allocate row");
+            exit(1);
+        }
+    }
+    return matrix;
+}
+
+void free_matrix(int **matrix, int rows) {
+    for (int i = 0; i < rows; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
+// מסלול מינימלי שעובר בכל צומת בדיוק פעם אחת, בלי לחזור להתחלה
+int hamiltonian_path_dp(Graph *nodes, int start, int path[V]) {
+    int **dp = allocate_matrix(1 << V, V);
+    int **parent = allocate_matrix(1 << V, V);
+
+    for (int i = 0; i < (1 << V); i++)
+        for (int j = 0; j < V; j++) {
+            dp[i][j] = INT_MAX;
+            parent[i][j] = -1;
+        }
+
+    dp[1 << start][start] = 0;
+
+
+    for (int mask = 0; mask < (1 << V); mask++) {
+        for (int u = 0; u < V; u++) {
+            if (!(mask & (1 << u)) || dp[mask][u] == INT_MAX) continue;
+
+            for (int i = 0; i < CLEBSCH_NEIGHBORS; i++) {
+                int v = nodes[u].neighbors[i]->id;
+                if (mask & (1 << v)) continue;
+
+                int next_mask = mask | (1 << v);
+                if (dp[next_mask][v] > dp[mask][u] + 1) {
+                    dp[next_mask][v] = dp[mask][u] + 1;
+                    parent[next_mask][v] = u;
+                }
+            }
+        }
+    }
+
+    // מחפש את הסיום עם המסלול הקצר ביותר
+    int end = -1;
+    int best_cost = INT_MAX;
+    for (int i = 0; i < V; i++) {
+        if (i != start && dp[(1 << V) - 1][i] < best_cost) {
+            best_cost = dp[(1 << V) - 1][i];
+            end = i;
+        }
+    }
+
+    if (end == -1) {
+        return 0; // אין מסלול
+    }
+
+    // משחזר את המסלול
+    int mask = (1 << V) - 1;
+    int idx = V - 1;
+    while (end != -1) {
+        path[idx--] = end;
+        int prev = parent[mask][end];
+        mask ^= (1 << end);
+        end = prev;
+    }
+
+    free_matrix(dp, 1 << V);
+    free_matrix(parent, 1 << V);
+    return 1; // הצלחה
+}
+
 // פונקציה להפקת מסלול רנדומלי
 void generate_path(Graph *nodes, int path[V]) {
     int start;
@@ -131,8 +214,7 @@ void generate_path(Graph *nodes, int path[V]) {
         shuffle(nodes[i].neighbors, CLEBSCH_NEIGHBORS);
     }
 
-    if (!backtrack(nodes, visited, path, start, 1))
-    {
+    if (!backtrack(nodes, visited, path, start, 1)) {
         perror("could not generate sBoxes");
         exit(1);
     }
@@ -224,7 +306,6 @@ void set_weight_AGraph_adj_mat(int AGraph_adj_lst[V][AGRAPH_NEIGHBORS], int AGra
         }
     }
 }
-
 
 int dijkstra_path(int graph[V][V], int start, int end, int path[V]) {
     int dist[V];         // dist[i] - the shortest distance found so far from start to i

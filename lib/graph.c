@@ -73,7 +73,7 @@ typedef struct Graph {
     struct Graph* neighbors[CLEBSCH_NEIGHBORS];
 } Graph;
 
-void init_graph(Graph *nodes, int adjacency[V][CLEBSCH_NEIGHBORS]) {
+static void init_graph(Graph *nodes, int adjacency[V][CLEBSCH_NEIGHBORS]) {
     int i, j;
     for (i = 0; i < V; i++) {
         nodes[i].id = i;
@@ -84,7 +84,7 @@ void init_graph(Graph *nodes, int adjacency[V][CLEBSCH_NEIGHBORS]) {
 }
 
 // פונקציה לערבוב רשימת שכנים
-void shuffle(Graph* array[], int n) {
+static void shuffle(Graph* array[], int n) {
     int i, j;
     Graph* temp;
     for (i = n - 1; i > 0; i--) {
@@ -96,7 +96,7 @@ void shuffle(Graph* array[], int n) {
 }
 
 // בקטרקינג למציאת מסלול בגרף קלבש
-int backtrack(Graph *nodes, int visited[V], int path[V], int current, int step) {
+static int backtrack(Graph *nodes, int visited[V], int path[V], int current, int step) {
     // אם עברנו בכל הצמתים, אז מצאנו מסלול
     if (step == V) return true;
 
@@ -116,7 +116,7 @@ int backtrack(Graph *nodes, int visited[V], int path[V], int current, int step) 
     return false;  // אם לא מצאנו מסלול
 }
 
-int **allocate_matrix(int rows, int cols) {
+static int **allocate_matrix(int rows, int cols) {
     int **matrix = malloc(rows * sizeof(int *));
     if (!matrix) {
         perror("Failed to allocate row pointers");
@@ -132,7 +132,7 @@ int **allocate_matrix(int rows, int cols) {
     return matrix;
 }
 
-void free_matrix(int **matrix, int rows) {
+static void free_matrix(int **matrix, int rows) {
     for (int i = 0; i < rows; i++) {
         free(matrix[i]);
     }
@@ -140,7 +140,7 @@ void free_matrix(int **matrix, int rows) {
 }
 
 // מסלול מינימלי שעובר בכל צומת בדיוק פעם אחת, בלי לחזור להתחלה
-int hamiltonian_path_dp(Graph *nodes, int start, int path[V]) {
+static int hamiltonian_path_dp(Graph *nodes, int start, int path[V]) {
     int **dp = allocate_matrix(1 << V, V);
     int **parent = allocate_matrix(1 << V, V);
 
@@ -200,7 +200,7 @@ int hamiltonian_path_dp(Graph *nodes, int start, int path[V]) {
 }
 
 // פונקציה להפקת מסלול רנדומלי
-void generate_path(Graph *nodes, int path[V]) {
+static void generate_path(Graph *nodes, int path[V]) {
     int start;
     int i;
     int visited[V] = {0};
@@ -248,8 +248,8 @@ void generate_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
         }
     }
 }
-
-void print_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
+/*
+static void print_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
     for (int i = 0; i < S_BOXES_COUNT; i++) {
         printf("S-Box %d:\n", i + 1);
         for (int row = 0; row < S_BOXES_ROWS; row++) {
@@ -261,155 +261,4 @@ void print_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
         printf("\n");
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//working with AGraph
-
-void set_weight_AGraph_adj_mat(int AGraph_adj_lst[V][AGRAPH_NEIGHBORS], int AGraph_adj_mat[V][V]) {
-    int r, c;
-    for (r = 0; r < V; r++) {
-        for (c = 0; c < V; c++) {
-            AGraph_adj_mat[r][c] = -1;
-        }
-    }
-    for (r = 0; r < V; r++) {
-        for (c = 0; c < AGRAPH_NEIGHBORS; c++) {
-            AGraph_adj_mat[r][AGraph_adj_lst[r][c]] = rand() % 101;
-        }
-    }
-}
-
-int dijkstra_path(int graph[V][V], int start, int end, int path[V]) {
-    int dist[V];         // dist[i] - the shortest distance found so far from start to i
-    int prev[V];         // prev[i] - the previous node we came from to get to i in the shortest path
-    int min, u, v, count, weight;
-    int current, path_len;
-    int temp, i;
-    int visited[V] = {0}; // marks whether a node has been processed or not
-
-    // Initialization of all nodes
-    for (int i = 0; i < V; i++) {
-        dist[i] = INF;    // At first, there is no path to any node, so distance is infinite
-        prev[i] = -1;     // We haven't come from anywhere yet
-    }
-
-    dist[start] = 0; // For the start node, the distance is 0
-
-    // Run the algorithm V-1 times (this is enough to find the shortest path for all nodes)
-    for (count = 0; count < V - 1; count++) {
-        // Find the unvisited node with the smallest distance
-        min = INF;
-        u = -1;
-        for (v = 0; v < V; v++) {
-            if (!visited[v] && dist[v] < min) {
-                min = dist[v];
-                u = v;
-            }
-        }
-
-        if (u == -1) break; // If no node can be reached, stop the process
-
-        visited[u] = 1; // Mark the current node as processed
-
-        // Now check all neighbors of node u
-        for (v = 0; v < V; v++) {
-            weight = graph[u][v]; // Check if there's an edge from u to v
-            if (weight != -1 && !visited[v] && dist[u] + weight < dist[v]) {
-                // If there is an edge, v is unvisited, and the new path is shorter than the previous one
-                dist[v] = dist[u] + weight; // Update the shortest distance to v
-                prev[v] = u; // Store that we came to v from u in the shortest path
-            }
-        }
-    }
-
-    // Reconstruct the path from the end to the start
-    current = end;
-    path_len = 0;
-
-    while (current != -1) {
-        path[path_len++] = current;  // Add the current node to the path
-        current = prev[current];     // Move to the previous node in the path
-    }
-
-    // Now the path is reversed (end → start), so we reverse it
-    for (i = 0; i < path_len / 2; i++) {
-        temp = path[i];
-        path[i] = path[path_len - i - 1];
-        path[path_len - i - 1] = temp;
-    }
-
-    return path_len; // Return the length of the path
-}
-
-void complexify_subkeys(uint64_t subkeys[V]) {
-    int AGraph_adj_mat[V][V];
-    int path[V];
-    int path_length;
-    int i, j;
-    int AGraph_adj_lst[16][2] = {
-        {1, 2},
-        {2, 3},
-        {3, 4},
-        {4, 5},
-        {5, 6},
-        {6, 7},
-        {7, 8},
-        {8, 9},
-        {9, 10},
-        {10, 11},
-        {11, 12},
-        {12, 13},
-        {13, 14},
-        {14, 15},
-        {15, 0}
-    };
-    uint64_t new_subkeys[V] = {0};
-    for (i = 0; i < 16; i++) {
-        set_weight_AGraph_adj_mat(AGraph_adj_lst, AGraph_adj_mat);// ממשקל מחד את הגרף
-        path_length = dijkstra_path(AGraph_adj_mat, i, (16 + i - 1) % 16, path);
-        for (j = 0; j < path_length; j++) {
-            new_subkeys[i] ^= subkeys[path[j]];
-        }
-    }
-    for (i = 0; i < V; i++) {
-        subkeys[i] = new_subkeys[i];
-    }
-}
-
-#include <stdio.h>
-#include <inttypes.h>
-
-void print_subkeys(uint64_t* subkeys) {
-    printf("Subkeys:\n");
-    for (int i = 0; i < 16; i++) {
-        printf("Subkey %d: 0x%016" PRIx64 "\n", i + 1, subkeys[i]);
-    }
-}
+*/

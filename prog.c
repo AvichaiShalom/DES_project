@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "DES_modes.h"
@@ -41,7 +42,7 @@ int isFilesTheSame(const char* file1, const char* file2) {
         return 0; // false
     }
 }
-
+/*
 typedef struct {
     uint64_t plaintext;
     uint64_t key;
@@ -290,4 +291,96 @@ int main() {
 
 
 	return 0;
+}
+*/
+
+int main() {
+    const char* key = "0123456789ABCDEF";
+    const char* input = "Hello, World!123";
+
+    for (int mode = 0; mode <= 4; mode++) {
+        printf("=== MODE %d ===\n", mode);
+
+        // --- טקסט ---
+        char* out;
+        int out_len;
+
+        run_DES_operation(
+            key,
+            mode,
+            0,
+            1,
+            NULL,
+            input,
+            strlen(input),
+            NULL,
+            &out,
+            &out_len
+        );
+
+        printf("%s\n", out);
+        printf("%d\n", out_len);
+
+        char* decrypted;
+        int decrypted_len;
+
+        run_DES_operation(
+            key,
+            mode,
+            1,
+            1,
+            NULL,
+            out,
+            out_len,
+            NULL,
+            &decrypted,
+            &decrypted_len
+        );
+
+        if (strncmp(input, decrypted, strlen(input)) == 0) {
+            printf("[TEXT] OK \n");
+        } else {
+            printf("[TEXT] FAIL \nOriginal: %s\nDecrypted: %s\n", input, decrypted);
+        }
+
+        free(out);
+        free(decrypted);
+
+        // --- קובץ ---
+        run_DES_operation(
+            key,
+            mode,
+            0,
+            0,
+            IN_FILE,
+            NULL,
+            0,
+            ENC_FILE,
+            NULL,
+            NULL
+        );
+
+        run_DES_operation(
+            key,
+            mode,
+            1,
+            0,
+            ENC_FILE,
+            NULL,
+            0,
+            DEC_FILE,
+            NULL,
+            NULL
+        );
+
+        if (isFilesTheSame(IN_FILE, DEC_FILE)) {
+            printf("[FILE] OK \n");
+        } else {
+            printf("[FILE] FAIL \n");
+        }
+
+        printf("\n");
+    }
+
+    return 0;
 }

@@ -1,4 +1,5 @@
 #include "../include/DES_modes.h"
+#include "../include/DES_api.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,77 +9,72 @@
 #define MAX_CIPHERTEXT_LEN 300
 #define TEMP_FILENAME_IN "temp_input.txt"
 #define TEMP_FILENAME_OUT "temp_output.txt"
+#define HEX_STRING_BUFFER_SIZE (MAX_CIPHERTEXT_LEN * 2 + 1)
 
-// כותבת טקסט לקובץ זמני
-void write_text_to_temp_file(const char *text, const char *file_name) {
-    FILE* file = fopen(file_name, "w");
+// כותבת טקסט לקובץ זמני (כעת כותבת בתים)
+static void write_bytes_to_temp_file(const uint8_t* data, int len, const char *file_name) {
+    FILE* file = fopen(file_name, "wb");
     if (!file) {
-        perror("Failed to create temp file");
+        perror("Failed to create temp binary file");
         return;
     }
-
-    fprintf(file, "%s", text);
+    fwrite(data, sizeof(uint8_t), len, file);
     fclose(file);
 }
 
-// כותבת תוכן בינארי לקובץ
-void write_bytes_to_file(const uint8_t* data, int len, const char* file_name) {
+// כותבת תוכן בינארי לקובץ (אותה פונקציה)
+static void write_binary_to_file(const uint8_t* data, int len, const char* file_name) {
     FILE* file = fopen(file_name, "wb");
     if (!file) {
         perror("Failed to create binary file");
         return;
     }
-
     fwrite(data, sizeof(uint8_t), len, file);
     fclose(file);
 }
 
 // מוחקת קובץ
-void delete_file(const char* filename) {
+static void delete_file(const char* filename) {
     if (remove(filename) != 0) {
         perror("Failed to delete file");
     }
 }
 
-// קריאת טקסט מקובץ
-size_t read_file_to_text(const char* filename, int max_len, char* out_text) {
-    FILE* file = fopen(filename, "r");
+// קריאת תוכן בינארי מקובץ
+static size_t read_file_to_bytes(const char* filename, int max_len, uint8_t* out_bytes) {
+    FILE* file = fopen(filename, "rb");
     if (!file) {
-        perror("Failed to open file for reading");
+        perror("Failed to open file for reading (binary)");
         return 0;
     }
+    size_t bytesRead = fread(out_bytes, sizeof(uint8_t), max_len, file);
+    fclose(file);
+    return bytesRead;
+}
 
+// קריאת טקסט מקובץ (משמש רק לפענוח סופי)
+static size_t read_text_from_file(const char* filename, int max_len, char* out_text) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        perror("Failed to open file for reading (text)");
+        return 0;
+    }
     size_t bytesRead = fread(out_text, sizeof(char), max_len, file);
     out_text[bytesRead] = '\0';
     fclose(file);
     return bytesRead;
 }
 
-// קריאת תוכן בינארי מקובץ
-size_t read_file_to_bytes(const char* filename, int max_len, uint8_t* out_bytes) {
-    FILE* file = fopen(filename, "rb");
-    if (!file) {
-        perror("Failed to open file for reading binary");
-        return 0;
-    }
-
-    size_t bytesRead = fread(out_bytes, sizeof(uint8_t), max_len, file);
-    fclose(file);
-    return bytesRead;
-}
-
-// מחרוזת הקסה -> uint64
-uint64_t hex_string_to_uint64(const char *hex_str) {
+// מחרוזת הקסה -> uint64 (אותה פונקציה)
+static uint64_t hex_string_to_uint64(const char *hex_str) {
     if (strlen(hex_str) != 16) {
         fprintf(stderr, "Invalid hex string length (expected 16)\n");
         exit(1);
     }
-
     uint64_t result = 0;
     for (int i = 0; i < 16; i++) {
         char c = hex_str[i];
         uint8_t value;
-
         if (c >= '0' && c <= '9') value = c - '0';
         else if (c >= 'a' && c <= 'f') value = 10 + (c - 'a');
         else if (c >= 'A' && c <= 'F') value = 10 + (c - 'A');
@@ -86,15 +82,13 @@ uint64_t hex_string_to_uint64(const char *hex_str) {
             fprintf(stderr, "Invalid hex character: %c\n", c);
             exit(1);
         }
-
         result = (result << 4) | value;
     }
-
     return result;
 }
 
-// בתים -> מחרוזת הקסה
-void bytes_to_hex_string(const uint8_t *bytes, int len, char *hex_str) {
+// בתים -> מחרוזת הקסה (אותה פונקציה)
+static void bytes_to_hex_string(const uint8_t *bytes, int len, char *hex_str) {
     const char *hex_chars = "0123456789abcdef";
     for (int i = 0; i < len; i++) {
         hex_str[i * 2]     = hex_chars[(bytes[i] >> 4) & 0xF];
@@ -103,49 +97,21 @@ void bytes_to_hex_string(const uint8_t *bytes, int len, char *hex_str) {
     hex_str[len * 2] = '\0';
 }
 
-// מחרוזת הקסה -> בתים
-void hex_string_to_bytes(const char* hex_str, uint8_t* bytes, int* num_bytes) {
+// מחרוזת הקסה -> בתים (אותה פונקציה)
+static void hex_string_to_bytes(const char* hex_str, uint8_t* bytes, int* num_bytes) {
     int len = strlen(hex_str);
     if (len % 2 != 0) {
         fprintf(stderr, "Hex string must have even length\n");
         exit(1);
     }
-
     *num_bytes = len / 2;
     for (int i = 0; i < *num_bytes; i++) {
         sscanf(hex_str + 2 * i, "%2hhx", &bytes[i]);
     }
 }
 
-// הצפנה/פענוח של טקסט, מחזיר טקסט מוצפן או מפוענח
-char *encrypt_decrypt_text(
-    const char *input_text,
-    void (*mode_function)(const char *, const char *, uint64_t),
-    uint64_t key,
-    int isDecrypt,
-    int *length
-) {
-    char *out = NULL;
-    int max_out_len = (!isDecrypt) ? MAX_CIPHERTEXT_LEN : MAX_PLAINTEXT_LEN;
-
-    if (!(out = calloc(max_out_len + 1, sizeof(char)))) {
-        perror("could not encrypt/decrypt text");
-        exit(1);
-    }
-
-    write_text_to_temp_file(input_text, TEMP_FILENAME_IN);
-    mode_function(TEMP_FILENAME_IN, TEMP_FILENAME_OUT, key);
-
-    *length = read_file_to_text(TEMP_FILENAME_OUT, max_out_len, out);
-
-    delete_file(TEMP_FILENAME_IN);
-    delete_file(TEMP_FILENAME_OUT);
-
-    return out;
-}
-
 // ההפעלה המרכזית
-__declspec(dllexport) void run_DES_operation(
+CRYPTO_API void run_DES_operation(
     const char* key,
     int mode, // 0-4
     int isDecrypt, // 1 = decrypt, 0 = encrypt
@@ -178,27 +144,31 @@ __declspec(dllexport) void run_DES_operation(
     if (use_text_input) {
         if (!isDecrypt) {
             // Encrypt
-            char* raw_output = encrypt_decrypt_text(input_text, modes_functions[mode][0], hexKey, 0, size_of_output_text);
-            uint8_t *output_bytes = (uint8_t *)raw_output;
-            int len = *size_of_output_text;
+            write_bytes_to_temp_file((const uint8_t*)input_text, size_of_input_text, TEMP_FILENAME_IN);
+            modes_functions[mode][0](TEMP_FILENAME_IN, TEMP_FILENAME_OUT, hexKey);
 
-            *output_text = malloc(len * 2 + 1);
-            bytes_to_hex_string(output_bytes, len, *output_text);
+            uint8_t ciphertext_bytes[MAX_CIPHERTEXT_LEN];
+            size_t ciphertext_len = read_file_to_bytes(TEMP_FILENAME_OUT, MAX_CIPHERTEXT_LEN, ciphertext_bytes);
 
-            free(raw_output);
+            *size_of_output_text = ciphertext_len * 2;
+            *output_text = malloc(*size_of_output_text + 1);
+            bytes_to_hex_string(ciphertext_bytes, ciphertext_len, *output_text);
+
+            delete_file(TEMP_FILENAME_IN);
+            delete_file(TEMP_FILENAME_OUT);
+
         } else {
             // Decrypt
-            uint8_t input_bytes[MAX_CIPHERTEXT_LEN];
+            uint8_t ciphertext_bytes[MAX_CIPHERTEXT_LEN];
             int num_bytes;
-            hex_string_to_bytes(input_text, input_bytes, &num_bytes);
+            hex_string_to_bytes(input_text, ciphertext_bytes, &num_bytes);
 
-            write_bytes_to_file(input_bytes, num_bytes, TEMP_FILENAME_IN);
+            write_bytes_to_temp_file(ciphertext_bytes, num_bytes, TEMP_FILENAME_IN);
             modes_functions[mode][1](TEMP_FILENAME_IN, TEMP_FILENAME_OUT, hexKey);
 
-            char* decrypted = calloc(MAX_PLAINTEXT_LEN + 1, sizeof(char));
-            *size_of_output_text = read_file_to_text(TEMP_FILENAME_OUT, MAX_PLAINTEXT_LEN, decrypted);
-
-            *output_text = decrypted;
+            char* plaintext = calloc(MAX_PLAINTEXT_LEN + 1, sizeof(char));
+            *size_of_output_text = read_text_from_file(TEMP_FILENAME_OUT, MAX_PLAINTEXT_LEN, plaintext);
+            *output_text = plaintext;
 
             delete_file(TEMP_FILENAME_IN);
             delete_file(TEMP_FILENAME_OUT);
@@ -207,4 +177,8 @@ __declspec(dllexport) void run_DES_operation(
         // File mode
         modes_functions[mode][isDecrypt](input_file, output_file_name, hexKey);
     }
+}
+
+CRYPTO_API void free_output(char* ptr) {
+    free(ptr);
 }

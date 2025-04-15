@@ -24,4 +24,6 @@ CRYPTO_API void run_DES_operation(
     int *size_of_output_text
 );
 
+CRYPTO_API void free_output(char *ptr);
+
 #endif

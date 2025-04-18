@@ -7,6 +7,8 @@
         "des_block.h": "c",
         "stdio.h": "c",
         "constants.h": "c",
-        "graph.h": "c"
+        "graph.h": "c",
+        "des_api.h": "c",
+        "des_modes_text.h": "c"
     }
 }

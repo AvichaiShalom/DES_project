@@ -1,6 +1,6 @@
 
-#ifndef DES_modes
-#define DES_modes
+#ifndef DES_modes_f
+#define DES_modes_f
 
 #include <stdint.h>
 #include <stdio.h>

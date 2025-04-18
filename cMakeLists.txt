@@ -4,6 +4,7 @@ project(cryptographic_library)
 # Set C standard
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_GENERATOR_PLATFORM x64 CACHE STRING "" FORCE)
 
 # מבטל בניית יישום GUI בחלונות
 set(CMAKE_WIN32_EXECUTABLE FALSE)
@@ -12,7 +13,8 @@ set(CMAKE_WIN32_EXECUTABLE FALSE)
 add_library(crypto SHARED
     lib/graph.c
     lib/DES_block.c
-    lib/DES_modes.c
+    lib/DES_modes_file.c
+    lib/DES_modes_text.c
     lib/DES_api.c
     lib/key_generation.c
 )

@@ -1,7 +1,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "DES_modes.h"
+#include "DES_modes_file.h"
+#include "DES_modes_text.h"
 #include "DES_block.h"
 #include "graph.h"
 #include "DES_api.h"
@@ -292,7 +293,7 @@ int main() {
 
 	return 0;
 }
-*/
+
 
 int main() {
     const char* key = "0123456789ABCDEF";
@@ -380,6 +381,32 @@ int main() {
         }
 
         printf("\n");
+    }
+
+    return 0;
+}
+*/
+
+int main() {
+    char *encrypted;
+    int encrypted_len;
+
+    const char* key = "133457799BBCDFF1";
+    const char* plaintext = "Hello, World!";
+    int result = DES_text((char*)key, 0, 0, (char*)plaintext, strlen(plaintext), &encrypted, &encrypted_len);
+
+    if (result == 0) {
+        printf("Encrypted (hex): %s\n", encrypted);
+        char* decrypted;
+        int decrypted_len;
+
+        DES_text((char*)key, 0, 1, encrypted, encrypted_len, &decrypted, &decrypted_len);
+        printf("Decrypted: %.*s\n", decrypted_len, decrypted);
+
+        free(encrypted);
+        free(decrypted);
+    } else {
+        printf("DES_text failed with code: %d\n", result);
     }
 
     return 0;

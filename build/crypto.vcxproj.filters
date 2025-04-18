@@ -7,7 +7,10 @@
     <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\DES_block.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\DES_modes.c">
+    <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\DES_modes_file.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\DES_modes_text.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\avich\Desktop\DES_project\lib\DES_api.c">

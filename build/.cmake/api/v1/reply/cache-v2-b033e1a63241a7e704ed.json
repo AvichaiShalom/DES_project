@@ -475,11 +475,11 @@
 			[
 				{
 					"name" : "HELPSTRING",
-					"value" : "Name of generator platform."
+					"value" : ""
 				}
 			],
-			"type" : "INTERNAL",
-			"value" : ""
+			"type" : "STRING",
+			"value" : "x64"
 		},
 		{
 			"name" : "CMAKE_GENERATOR_TOOLSET",

@@ -7,8 +7,8 @@
 
 #define MAX_PLAINTEXT_LEN 100
 #define MAX_CIPHERTEXT_LEN 300
-#define TEMP_FILENAME_IN "temp_input.bin" // שימוש בסיומת bin עבור קבצים בינאריים
-#define TEMP_FILENAME_OUT "temp_output.bin" // שימוש בסיומת bin עבור קבצים בינאריים
+#define TEMP_FILENAME_IN "../App_Data/temp_input.bin" // שימוש בסיומת bin עבור קבצים בינאריים
+#define TEMP_FILENAME_OUT "../App_Data/temp_output.bin" // שימוש בסיומת bin עבור קבצים בינאריים
 #define HEX_STRING_BUFFER_SIZE (MAX_CIPHERTEXT_LEN * 2 + 1)
 
 // כותבת טקסט לקובץ זמני (כעת כותבת בתים)
@@ -121,7 +121,10 @@ CRYPTO_API void run_DES_operation(
     int size_of_input_text,
     char* output_file_name,
     char** output_text,
-    int* size_of_output_text
+    int* size_of_output_text,
+    //קבצים זמניים שנוצרים בתוך App_Data
+    const char* tempIn,
+    const char* tempOut
 ) {
     void (*modes_functions[5][2])(const char *, const char *, uint64_t);
     uint64_t hexKey = hex_string_to_uint64(key);
@@ -144,18 +147,18 @@ CRYPTO_API void run_DES_operation(
     if (use_text_input) {
         if (!isDecrypt) {
             // Encrypt
-            write_bytes_to_temp_file((const uint8_t*)input_text, size_of_input_text, TEMP_FILENAME_IN);
-            modes_functions[mode][0](TEMP_FILENAME_IN, TEMP_FILENAME_OUT, hexKey);
+            write_bytes_to_temp_file((const uint8_t*)input_text, size_of_input_text, tempIn);
+            modes_functions[mode][0](tempIn, tempOut, hexKey);
 
             uint8_t ciphertext_bytes[MAX_CIPHERTEXT_LEN];
-            size_t ciphertext_len = read_file_to_bytes(TEMP_FILENAME_OUT, MAX_CIPHERTEXT_LEN, ciphertext_bytes);
+            size_t ciphertext_len = read_file_to_bytes(tempOut, MAX_CIPHERTEXT_LEN, ciphertext_bytes);
 
             *size_of_output_text = ciphertext_len * 2;
             *output_text = malloc(*size_of_output_text + 1);
             bytes_to_hex_string(ciphertext_bytes, ciphertext_len, *output_text);
 
-            delete_file(TEMP_FILENAME_IN);
-            delete_file(TEMP_FILENAME_OUT);
+            delete_file(tempIn);
+            delete_file(tempOut);
 
         } else {
             // Decrypt
@@ -163,15 +166,15 @@ CRYPTO_API void run_DES_operation(
             int num_bytes;
             hex_string_to_bytes(input_text, ciphertext_bytes, &num_bytes);
 
-            write_bytes_to_temp_file(ciphertext_bytes, num_bytes, TEMP_FILENAME_IN);
-            modes_functions[mode][1](TEMP_FILENAME_IN, TEMP_FILENAME_OUT, hexKey);
+            write_bytes_to_temp_file(ciphertext_bytes, num_bytes, tempIn);
+            modes_functions[mode][1](tempIn, tempOut, hexKey);
 
             char* plaintext = calloc(MAX_PLAINTEXT_LEN + 1, sizeof(char));
-            *size_of_output_text = read_text_from_file(TEMP_FILENAME_OUT, MAX_PLAINTEXT_LEN, plaintext);
+            *size_of_output_text = read_text_from_file(tempOut, MAX_PLAINTEXT_LEN, plaintext);
             *output_text = plaintext;
 
-            delete_file(TEMP_FILENAME_IN);
-            delete_file(TEMP_FILENAME_OUT);
+            delete_file(tempIn);
+            delete_file(tempOut);
         }
     } else {
         // File mode (ללא שינוי)

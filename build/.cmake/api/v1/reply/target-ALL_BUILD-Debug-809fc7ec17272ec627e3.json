@@ -17,13 +17,13 @@
 	"dependencies" : 
 	[
 		{
-			"id" : "crypto::@6890427a1f51a3e7e1df"
-		},
-		{
 			"id" : "DES_run::@6890427a1f51a3e7e1df"
 		},
 		{
 			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "crypto::@6890427a1f51a3e7e1df"
 		}
 	],
 	"folder" : 

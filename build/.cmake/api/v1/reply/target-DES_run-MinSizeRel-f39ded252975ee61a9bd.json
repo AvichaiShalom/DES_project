@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "bin/Release/DES_run.exe"
+			"path" : "bin/MinSizeRel/DES_run.exe"
 		},
 		{
-			"path" : "bin/Release/DES_run.pdb"
+			"path" : "bin/MinSizeRel/DES_run.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -45,7 +45,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "/DWIN32 /D_WINDOWS /O2 /Ob2 /DNDEBUG -std:c11 -MD"
+					"fragment" : "/DWIN32 /D_WINDOWS /O1 /Ob1 /DNDEBUG -std:c11 -MD"
 				}
 			],
 			"includes" : 
@@ -73,11 +73,11 @@
 	"dependencies" : 
 	[
 		{
-			"backtrace" : 2,
-			"id" : "crypto::@6890427a1f51a3e7e1df"
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
 		},
 		{
-			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+			"backtrace" : 2,
+			"id" : "crypto::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "DES_run::@6890427a1f51a3e7e1df",
@@ -86,7 +86,7 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "/DWIN32 /D_WINDOWS /O2 /Ob2 /DNDEBUG -MD",
+				"fragment" : "/DWIN32 /D_WINDOWS /O1 /Ob1 /DNDEBUG -MD",
 				"role" : "flags"
 			},
 			{
@@ -95,7 +95,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "lib\\Release\\crypto.lib",
+				"fragment" : "lib\\MinSizeRel\\crypto.lib",
 				"role" : "libraries"
 			},
 			{

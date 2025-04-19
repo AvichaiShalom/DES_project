@@ -21,7 +21,10 @@ CRYPTO_API void run_DES_operation( // שינוי ל-int
     int size_of_input_text,
     char *output_file_name,
     char **output_text,
-    int *size_of_output_text
+    int *size_of_output_text,
+    //קבצים זמניים שנוצרים בתוך App_Data
+    const char* tempIn,
+    const char* tempOut
 );
 
 CRYPTO_API void free_output(char *ptr);

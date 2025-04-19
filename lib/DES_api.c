@@ -189,8 +189,7 @@ CRYPTO_API void free_output(char* ptr) {
 
 CRYPTO_API void generate_random_key(char** key) {
     uint8_t keyArr[8];
-    uint64_t keyHex = generate_hex_key();
-    memcpy(keyArr, &keyHex, 8);
+    generate_hex_key(keyArr);
     *key = calloc(17, sizeof(char)); // 8 bytes * 2 chars/byte + null terminator
     if (*key == NULL) return; // טיפול בכישלון הקצאת זיכרון
 

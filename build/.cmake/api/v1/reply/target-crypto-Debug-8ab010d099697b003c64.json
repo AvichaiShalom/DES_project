@@ -2,10 +2,13 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "bin/Release/DES_run.exe"
+			"path" : "bin/Debug/crypto.dll"
 		},
 		{
-			"path" : "bin/Release/DES_run.pdb"
+			"path" : "lib/Debug/crypto.lib"
+		},
+		{
+			"path" : "bin/Debug/crypto.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -13,8 +16,9 @@
 	{
 		"commands" : 
 		[
-			"add_executable",
-			"target_link_libraries"
+			"add_library",
+			"target_compile_definitions",
+			"target_include_directories"
 		],
 		"files" : 
 		[
@@ -28,13 +32,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 34,
+				"line" : 13,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 39,
+				"line" : 28,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 22,
 				"parent" : 0
 			}
 		]
@@ -45,13 +55,23 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "/DWIN32 /D_WINDOWS /O2 /Ob2 /DNDEBUG -std:c11 -MD"
+					"fragment" : "/DWIN32 /D_WINDOWS /Ob0 /Od /RTC1 -std:c11 -MDd -Zi"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 2,
+					"define" : "BUILDING_CRYPTO_DLL"
+				},
+				{
+					"define" : "crypto_EXPORTS"
 				}
 			],
 			"includes" : 
 			[
 				{
-					"backtrace" : 2,
+					"backtrace" : 3,
 					"path" : "C:/Users/avich/Desktop/DES_project/include"
 				}
 			],
@@ -66,7 +86,11 @@
 			},
 			"sourceIndexes" : 
 			[
-				0
+				0,
+				1,
+				2,
+				3,
+				4
 			]
 		}
 	],
@@ -74,29 +98,16 @@
 	[
 		{
 			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
-		},
-		{
-			"backtrace" : 2,
-			"id" : "crypto::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "DES_run::@6890427a1f51a3e7e1df",
+	"id" : "crypto::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "/DWIN32 /D_WINDOWS /O2 /Ob2 /DNDEBUG -MD",
+				"fragment" : "/machine:x64 /debug /INCREMENTAL",
 				"role" : "flags"
-			},
-			{
-				"fragment" : "/machine:x64 /INCREMENTAL:NO /subsystem:console",
-				"role" : "flags"
-			},
-			{
-				"backtrace" : 2,
-				"fragment" : "lib\\Release\\crypto.lib",
-				"role" : "libraries"
 			},
 			{
 				"fragment" : "kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib",
@@ -105,8 +116,8 @@
 		],
 		"language" : "C"
 	},
-	"name" : "DES_run",
-	"nameOnDisk" : "DES_run.exe",
+	"name" : "crypto",
+	"nameOnDisk" : "crypto.dll",
 	"paths" : 
 	{
 		"build" : ".",
@@ -118,7 +129,11 @@
 			"name" : "Source Files",
 			"sourceIndexes" : 
 			[
-				0
+				0,
+				1,
+				2,
+				3,
+				4
 			]
 		}
 	],
@@ -127,9 +142,33 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "prog.c",
+			"path" : "lib/graph.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "lib/DES_block.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "lib/DES_modes_file.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "lib/DES_api.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "lib/key_generation.c",
 			"sourceGroupIndex" : 0
 		}
 	],
-	"type" : "EXECUTABLE"
+	"type" : "SHARED_LIBRARY"
 }

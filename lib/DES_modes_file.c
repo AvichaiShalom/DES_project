@@ -18,13 +18,18 @@ void add_padding(uint8_t *buffer, size_t bytes_read, uint64_t *block) {
 	memcpy(block, buffer, BLOCK_SIZE_BYTES);
 }
 
-void remove_padding(uint8_t* buffer, size_t* bytes_read) {
+int remove_padding(uint8_t* buffer, size_t* bytes_read) {
 	// הקוראים צריכים לדעת את הפדינג מתוך byte האחרון ב-buffer
 	size_t padding = buffer[BLOCK_SIZE_BYTES - 1];
 	*bytes_read = BLOCK_SIZE_BYTES - padding;  // אורך המידע האמיתי אחרי הפדינג
+	if(padding > 8){
+		perror("could not remove padding");
+		return ERROR_COULD_NOT_REMOVE_PADDING;
+	}
+	return ERROR_NONE;
 }
 
-void encrypt_file_ECB(const char* input_file, const char* output_file, uint64_t key) {
+int encrypt_file_ECB(const char* input_file, const char* output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -36,7 +41,7 @@ void encrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -44,7 +49,7 @@ void encrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// קריאה והצפנה של בלוקים בגודל 8 בתים
@@ -62,9 +67,10 @@ void encrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t key) {
+int decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -76,7 +82,7 @@ void decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -84,7 +90,7 @@ void decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	fseek(input, 0, SEEK_END);
@@ -101,15 +107,20 @@ void decrypt_file_ECB(const char* input_file, const char* output_file, uint64_t 
 	memcpy(buffer, &decrypted_block ,BLOCK_SIZE_BYTES);
 
 	// קריאת הבלוק האחרון והסרת הפדינג
-	remove_padding(buffer, &bytes_read);
+	if(remove_padding(buffer, &bytes_read) == ERROR_COULD_NOT_REMOVE_PADDING){
+		fclose(input);
+		fclose(output);
+		return ERROR_COULD_NOT_REMOVE_PADDING;
+	}
 	fwrite(buffer, 1, bytes_read, output);
 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void encrypt_file_CBC(const char *input_file, const char *output_file, uint64_t key) {
+int encrypt_file_CBC(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -122,7 +133,7 @@ void encrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -130,7 +141,7 @@ void encrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	srand(time(NULL));
@@ -156,9 +167,10 @@ void encrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t key) {
+int decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -171,7 +183,7 @@ void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -179,14 +191,14 @@ void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	if(fread(&iv, BLOCK_SIZE_BYTES, 1, input) != 1) {
 		perror("could not read IV");
 		fclose(input);
 		fclose(output);
-		exit(1);
+		return ERROR_COULD_NOT_READ_PREFIX;
 	}
 
 	fseek(input, 0, SEEK_END);
@@ -207,15 +219,20 @@ void decrypt_file_CBC(const char *input_file, const char *output_file, uint64_t 
 	memcpy(buffer, &decrypted_block ,8);
 
 	// קריאת הבלוק האחרון והסרת הפדינג
-	remove_padding(buffer, &bytes_read);
+	if(remove_padding(buffer, &bytes_read) == ERROR_COULD_NOT_REMOVE_PADDING){
+		fclose(input);
+		fclose(output);
+		return ERROR_COULD_NOT_REMOVE_PADDING;
+	}
 	fwrite(buffer, 1, bytes_read, output);
 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void encrypt_file_CFB(const char *input_file, const char *output_file, uint64_t key) {
+int encrypt_file_CFB(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -228,7 +245,7 @@ void encrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -236,7 +253,7 @@ void encrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	srand(time(NULL));
@@ -262,9 +279,10 @@ void encrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t key) {
+int decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -277,7 +295,7 @@ void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -285,14 +303,14 @@ void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	if(fread(&last_block, BLOCK_SIZE_BYTES, 1, input) != 1) {
 		perror("could not read IV");
 		fclose(input);
 		fclose(output);
-		exit(1);
+		return ERROR_COULD_NOT_READ_PREFIX;
 	}
 
 	fseek(input, 0, SEEK_END);
@@ -312,15 +330,20 @@ void decrypt_file_CFB(const char *input_file, const char *output_file, uint64_t 
 	memcpy(buffer, &decrypted_block ,BLOCK_SIZE_BYTES);
 
 	// קריאת הבלוק האחרון והסרת הפדינג
-	remove_padding(buffer, &bytes_read);
+	if(remove_padding(buffer, &bytes_read) == ERROR_COULD_NOT_REMOVE_PADDING) {
+		fclose(input);
+		fclose(output);
+		return ERROR_COULD_NOT_REMOVE_PADDING;
+	} 
 	fwrite(buffer, 1, bytes_read, output);
 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key) {
+int encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
 	FILE* output;
 	uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -333,7 +356,7 @@ void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -341,7 +364,7 @@ void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	srand(time(NULL));
@@ -369,9 +392,10 @@ void encrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key) {
+int decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
     FILE* output;
     uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -384,7 +408,7 @@ void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -392,14 +416,14 @@ void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	if(fread(&iv, BLOCK_SIZE_BYTES, 1, input) != 1) {
 		perror("could not read IV");
 		fclose(input);
 		fclose(output);
-		exit(1);
+		return ERROR_COULD_NOT_READ_PREFIX;
 	}
 
 	fseek(input, 0, SEEK_END);
@@ -417,15 +441,20 @@ void decrypt_file_OFB(const char *input_file, const char *output_file, uint64_t 
 	DES_encrypt(iv, &encIV, key);
 	plaintext = ciphertext ^ encIV;
 	memcpy(buffer, &plaintext, BLOCK_SIZE_BYTES);
-	remove_padding(buffer, &bytes_read);
+	if(remove_padding(buffer, &bytes_read) == ERROR_COULD_NOT_REMOVE_PADDING) {
+		fclose(input);
+		fclose(output);
+		return ERROR_COULD_NOT_REMOVE_PADDING;
+	}
 	fwrite(buffer, 1, bytes_read, output);
 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key) {
+int encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
     FILE* output;
     uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -439,7 +468,7 @@ void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -447,7 +476,7 @@ void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	srand(time(NULL));
@@ -474,9 +503,10 @@ void encrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }
 
-void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key) {
+int decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t key) {
 	FILE* input;
     FILE* output;
     uint8_t buffer[BLOCK_SIZE_BYTES];
@@ -488,7 +518,7 @@ void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 	input = fopen(input_file, "rb");
 	if (!input) {
 		perror("Failed to open input file");
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	// פתיחת קובץ פלט לכתיבה
@@ -496,14 +526,14 @@ void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 	if (!output) {
 		perror("Failed to open output file");
 		fclose(input);
-		exit(1);
+		return ERROR_COULD_NOT_OPEN_FILE;
 	}
 
 	if(fread(&nonce, INT_4_BYTES, 1, input) != 1) {
 		perror("could not read nonce");
 		fclose(input);
 		fclose(output);
-		exit(1);
+		return ERROR_COULD_NOT_READ_PREFIX;
 	}
 
 	fseek(input, 0, SEEK_END);
@@ -521,10 +551,15 @@ void decrypt_file_CTR(const char *input_file, const char *output_file, uint64_t 
 	DES_encrypt(((uint64_t)(nonce) << INT_32_BITS) | counter, &encCTR, key);
 	block ^= encCTR;
 	memcpy(buffer, &block, BLOCK_SIZE_BYTES);
-	remove_padding(buffer, &bytes_read);
+	if(remove_padding(buffer, &bytes_read) == ERROR_COULD_NOT_REMOVE_PADDING) {
+		fclose(input);
+		fclose(output);
+		return ERROR_COULD_NOT_REMOVE_PADDING;
+	}
 	fwrite(buffer, 1, bytes_read, output);
 
 	// סגירת קבצים
 	fclose(input);
 	fclose(output);
+	return ERROR_NONE;
 }

@@ -7,8 +7,6 @@
 
 #define MAX_PLAINTEXT_LEN 100
 #define MAX_CIPHERTEXT_LEN 300
-#define TEMP_FILENAME_IN "../App_Data/temp_input.bin" // שימוש בסיומת bin עבור קבצים בינאריים
-#define TEMP_FILENAME_OUT "../App_Data/temp_output.bin" // שימוש בסיומת bin עבור קבצים בינאריים
 #define HEX_STRING_BUFFER_SIZE (MAX_CIPHERTEXT_LEN * 2 + 1)
 
 // כותבת טקסט לקובץ זמני (כעת כותבת בתים)
@@ -111,7 +109,7 @@ static void hex_string_to_bytes(const char* hex_str, uint8_t* bytes, int* num_by
 }
 
 // ההפעלה המרכזית - גרסה מעודכנת לטיפול בטקסט
-CRYPTO_API void run_DES_operation(
+CRYPTO_API int run_DES_operation(
     const char* key,
     int mode, // 0-4
     int isDecrypt, // 1 = decrypt, 0 = encrypt
@@ -126,8 +124,10 @@ CRYPTO_API void run_DES_operation(
     const char* tempIn,
     const char* tempOut
 ) {
-    void (*modes_functions[5][2])(const char *, const char *, uint64_t);
+    int (*modes_functions[5][2])(const char *, const char *, uint64_t);
     uint64_t hexKey = hex_string_to_uint64(key);
+
+    int error_code = 0;
 
     //ECB
     modes_functions[0][0] = encrypt_file_ECB; modes_functions[0][1] = decrypt_file_ECB;
@@ -148,7 +148,7 @@ CRYPTO_API void run_DES_operation(
         if (!isDecrypt) {
             // Encrypt
             write_bytes_to_temp_file((const uint8_t*)input_text, size_of_input_text, tempIn);
-            modes_functions[mode][0](tempIn, tempOut, hexKey);
+            error_code = modes_functions[mode][0](tempIn, tempOut, hexKey);
 
             uint8_t ciphertext_bytes[MAX_CIPHERTEXT_LEN];
             size_t ciphertext_len = read_file_to_bytes(tempOut, MAX_CIPHERTEXT_LEN, ciphertext_bytes);
@@ -167,7 +167,7 @@ CRYPTO_API void run_DES_operation(
             hex_string_to_bytes(input_text, ciphertext_bytes, &num_bytes);
 
             write_bytes_to_temp_file(ciphertext_bytes, num_bytes, tempIn);
-            modes_functions[mode][1](tempIn, tempOut, hexKey);
+            error_code = modes_functions[mode][1](tempIn, tempOut, hexKey);
 
             char* plaintext = calloc(MAX_PLAINTEXT_LEN + 1, sizeof(char));
             *size_of_output_text = read_text_from_file(tempOut, MAX_PLAINTEXT_LEN, plaintext);
@@ -178,8 +178,9 @@ CRYPTO_API void run_DES_operation(
         }
     } else {
         // File mode (ללא שינוי)
-        modes_functions[mode][isDecrypt](input_file, output_file_name, hexKey);
+        error_code = modes_functions[mode][isDecrypt](input_file, output_file_name, hexKey);
     }
+    return error_code;
 }
 
 CRYPTO_API void free_output(char* ptr) {

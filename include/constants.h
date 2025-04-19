@@ -17,4 +17,10 @@
 #define INT_32_BITS 32
 #define INT_4_BYTES 4
 
+//define errors:
+#define ERROR_NONE 0
+#define ERROR_COULD_NOT_OPEN_FILE 1
+#define ERROR_COULD_NOT_READ_PREFIX 2
+#define ERROR_COULD_NOT_REMOVE_PADDING 3
+
 #endif

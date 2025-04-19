@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "DES_modes_file.h"
-#include "DES_modes_text.h"
 #include "DES_block.h"
 #include "graph.h"
 #include "DES_api.h"

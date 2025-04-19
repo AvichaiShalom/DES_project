@@ -11,7 +11,7 @@
   #define CRYPTO_API
 #endif
 
-CRYPTO_API void run_DES_operation( // שינוי ל-int
+CRYPTO_API int run_DES_operation( // שינוי ל-int
     const char *key,
     int mode,           // 0-4
     int isDecrypt,      // 1 = decrypt, 0 = encrypt
@@ -30,7 +30,5 @@ CRYPTO_API void run_DES_operation( // שינוי ל-int
 CRYPTO_API void free_output(char *ptr);
 
 CRYPTO_API void generate_random_key(char **key);
-
-//CRYPTO_API int DES_text(char *key, int mode, int isDecrypt, char *input_text, int input_text_length, char **output_text, int *size_of_output_text);
 
 #endif

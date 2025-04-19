@@ -2,13 +2,13 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "bin/Debug/crypto.dll"
+			"path" : "bin/RelWithDebInfo/crypto.dll"
 		},
 		{
-			"path" : "lib/Debug/crypto.lib"
+			"path" : "lib/RelWithDebInfo/crypto.lib"
 		},
 		{
-			"path" : "bin/Debug/crypto.pdb"
+			"path" : "bin/RelWithDebInfo/crypto.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -38,13 +38,13 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 29,
+				"line" : 28,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 23,
+				"line" : 22,
 				"parent" : 0
 			}
 		]
@@ -55,7 +55,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "/DWIN32 /D_WINDOWS /Ob0 /Od /RTC1 -std:c11 -MDd -Zi"
+					"fragment" : "/DWIN32 /D_WINDOWS /O2 /Ob1 /DNDEBUG -std:c11 -MD -Zi"
 				}
 			],
 			"defines" : 
@@ -90,8 +90,7 @@
 				1,
 				2,
 				3,
-				4,
-				5
+				4
 			]
 		}
 	],
@@ -134,8 +133,7 @@
 				1,
 				2,
 				3,
-				4,
-				5
+				4
 			]
 		}
 	],
@@ -157,12 +155,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "lib/DES_modes_file.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "lib/DES_modes_text.c",
 			"sourceGroupIndex" : 0
 		},
 		{

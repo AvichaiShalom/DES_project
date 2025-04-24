@@ -9,6 +9,7 @@
         "constants.h": "c",
         "graph.h": "c",
         "des_api.h": "c",
-        "des_modes_text.h": "c"
+        "des_modes_text.h": "c",
+        "stdlib.h": "c"
     }
 }

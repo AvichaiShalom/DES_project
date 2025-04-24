@@ -5,9 +5,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#define MAX_PLAINTEXT_LEN 100
-#define MAX_CIPHERTEXT_LEN 300
-#define HEX_STRING_BUFFER_SIZE (MAX_CIPHERTEXT_LEN * 2 + 1)
+#define MAX_PLAINTEXT_LEN 2000
+#define MAX_CIPHERTEXT_LEN 2050
 
 // כותבת טקסט לקובץ זמני (כעת כותבת בתים)
 static void write_bytes_to_temp_file(const uint8_t* data, int len, const char *file_name) {

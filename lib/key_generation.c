@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 void generate_hex_key(uint8_t keyArr[8]) {
     int i = 0;

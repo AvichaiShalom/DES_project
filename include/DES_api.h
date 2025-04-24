@@ -11,7 +11,7 @@
   #define CRYPTO_API
 #endif
 
-CRYPTO_API int run_DES_operation( // שינוי ל-int
+CRYPTO_API int run_DES_operation(
     const char *key,
     int mode,           // 0-4
     int isDecrypt,      // 1 = decrypt, 0 = encrypt

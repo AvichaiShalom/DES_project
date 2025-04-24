@@ -22,7 +22,7 @@ int remove_padding(uint8_t* buffer, size_t* bytes_read) {
 	// הקוראים צריכים לדעת את הפדינג מתוך byte האחרון ב-buffer
 	size_t padding = buffer[BLOCK_SIZE_BYTES - 1];
 	*bytes_read = BLOCK_SIZE_BYTES - padding;  // אורך המידע האמיתי אחרי הפדינג
-	if(padding > 8){
+	if(padding > BLOCK_SIZE_BYTES){
 		perror("could not remove padding");
 		return ERROR_COULD_NOT_REMOVE_PADDING;
 	}

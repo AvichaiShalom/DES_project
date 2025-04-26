@@ -11,6 +11,7 @@
   #define CRYPTO_API
 #endif
 
+// פונקציה ראשית שדרכה אפשר להצפין\לפענח קובץ\טקסט
 CRYPTO_API int run_DES_operation(
     const char *key,
     int mode,           // 0-4
@@ -26,9 +27,13 @@ CRYPTO_API int run_DES_operation(
     const char* tempIn,
     const char* tempOut
 );
-
+/*
+פונציה שמשחררת זיכרון מההיפ,
+נועדה כדי לשחרר את הפלט כשמצפינים\מפענחים טקסט הפלט נישמר בהיפ וצריך לשחרר אותו בעזרת הפעולה
+*/
 CRYPTO_API void free_output(char *ptr);
 
+// פונצקיה שמיצרת מפתח רנדומלי
 CRYPTO_API void generate_random_key(char **key);
 
 #endif

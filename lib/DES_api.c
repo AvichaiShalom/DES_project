@@ -62,7 +62,7 @@ static size_t read_text_from_file(const char* filename, int max_len, char* out_t
     return bytesRead;
 }
 
-// מחרוזת הקסה -> uint64 (אותה פונקציה)
+// מחרוזת להקסה
 static uint64_t hex_string_to_uint64(const char *hex_str) {
     if (strlen(hex_str) != 16) {
         fprintf(stderr, "Invalid hex string length (expected 16)\n");
@@ -84,7 +84,7 @@ static uint64_t hex_string_to_uint64(const char *hex_str) {
     return result;
 }
 
-// בתים -> מחרוזת הקסה (אותה פונקציה)
+// בתים למחרוזת הקסה
 static void bytes_to_hex_string(const uint8_t *bytes, int len, char *hex_str) {
     const char *hex_chars = "0123456789abcdef";
     for (int i = 0; i < len; i++) {
@@ -94,7 +94,7 @@ static void bytes_to_hex_string(const uint8_t *bytes, int len, char *hex_str) {
     hex_str[len * 2] = '\0';
 }
 
-// מחרוזת הקסה -> בתים (אותה פונקציה)
+// מחרוזת הקסה לבתים
 static void hex_string_to_bytes(const char* hex_str, uint8_t* bytes, int* num_bytes) {
     int len = strlen(hex_str);
     if (len % 2 != 0) {
@@ -107,7 +107,7 @@ static void hex_string_to_bytes(const char* hex_str, uint8_t* bytes, int* num_by
     }
 }
 
-// ההפעלה המרכזית - גרסה מעודכנת לטיפול בטקסט
+// ההפעלה ראשית מאפשרת הצפה/פענוח של קובץ/טקסט
 CRYPTO_API int run_DES_operation(
     const char* key,
     int mode, // 0-4
@@ -176,20 +176,24 @@ CRYPTO_API int run_DES_operation(
             delete_file(tempOut);
         }
     } else {
-        // File mode (ללא שינוי)
         error_code = modes_functions[mode][isDecrypt](input_file, output_file_name, hexKey);
     }
     return error_code;
 }
 
+/*
+פונציה שמשחררת זיכרון מההיפ,
+נועדה כדי לשחרר את הפלט כשמצפינים\מפענחים טקסט הפלט נישמר בהיפ וצריך לשחרר אותו בעזרת הפעולה
+*/
 CRYPTO_API void free_output(char* ptr) {
     free(ptr);
 }
 
+// פונצקיה שמיצרת מפתח רנדומלי
 CRYPTO_API void generate_random_key(char** key) {
     uint8_t keyArr[8];
     generate_hex_key(keyArr);
-    *key = calloc(17, sizeof(char)); // 8 bytes * 2 chars/byte + null terminator
+    *key = calloc(17, sizeof(char));
     if (*key == NULL) return; // טיפול בכישלון הקצאת זיכרון
 
     bytes_to_hex_string(keyArr, 8, *key);

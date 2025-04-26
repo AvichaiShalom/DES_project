@@ -29,6 +29,7 @@ typedef struct Graph {
     struct Graph* neighbors[CLEBSCH_NEIGHBORS];
 } Graph;
 
+// מאתחל את הגרף
 static void init_graph(Graph *nodes, int adjacency[V][CLEBSCH_NEIGHBORS]) {
     int i, j;
     for (i = 0; i < V; i++) {
@@ -51,30 +52,30 @@ static void shuffle(Graph* array[], int n) {
     }
 }
 
-// בקטרקינג למציאת מסלול בגרף קלבש
+// בקטרקינג למציאת מסלול המילטוני
 static int backtrack(Graph *nodes, int visited[V], int path[V], int current, int step) {
     int i;
     int next;
-    // אם עברנו בכל הצמתים, אז מצאנו מסלול
+    // נמצא מסלול
     if (step == V) return 1;
 
     // עבור כל שכן של הצומת הנוכחי
     for (i = 0; i < CLEBSCH_NEIGHBORS; i++) {
-        next = nodes[current].neighbors[i]->id;  // ניגש לשכן מתוך המצביע
+        next = nodes[current].neighbors[i]->id;
 
         // אם השכן לא בוקר עדיין
         if (!visited[next]) {
-            visited[next] = 1;  // סימן את השכן כביקרנו בו
-            path[step] = next;  // עדכון המסלול
-            if (backtrack(nodes, visited, path, next, step + 1)) return 1; // חזרה אם הצלחנו
+            visited[next] = 1;
+            path[step] = next; 
+            if (backtrack(nodes, visited, path, next, step + 1)) return 1;// נמצא מסלול
             visited[next] = 0;  // חזרה אחורה אם לא הצלחנו
         }
     }
 
-    return 0;  // אם לא מצאנו מסלול
+    return 0;  // לא נמצע מסלול
 }
 
-// פונקציה להפקת מסלול רנדומלי
+// פונקציה להפקת מסלול המילטוני רנדומלי
 static void generate_path(Graph *nodes, int path[V]) {
     int start;
     int i;
@@ -85,12 +86,13 @@ static void generate_path(Graph *nodes, int path[V]) {
     visited[start] = 1;
     path[0] = start;
 
+    // עובר על כל צומת, בעבור כל צומת מערבב את סדר השכנים
     for (i = 0; i < V; i++) {
         shuffle(nodes[i].neighbors, CLEBSCH_NEIGHBORS);
     }
 
     if (!backtrack(nodes, visited, path, start, 1)) {
-        perror("could not generate sBoxes");
+        perror("could not generate sBoxes");// על הגרף שלי זה לא אמור להגיע לכאן אף פעם
         exit(1);
     }
 }
@@ -117,8 +119,8 @@ void generate_sboxes(int sboxes[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
         {5, 6, 7, 8, 9}
     };
     init_graph(nodes, clebsch_adj_lst);
-    for (int i = 0; i < S_BOXES_COUNT; i++) { // יצירת 8 תיבות S-Box
-        for (int j = 0; j < S_BOXES_ROWS; j++) { // לכל S-Box יש 4 מסלולים
+    for (int i = 0; i < S_BOXES_COUNT; i++) { // 8 תיבות
+        for (int j = 0; j < S_BOXES_ROWS; j++) { // 4 שורות
             generate_path(nodes, sboxes[i][j]); // מייצר מסלול רנדומלי
         }
     }

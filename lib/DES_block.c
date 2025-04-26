@@ -4,7 +4,7 @@
 #include "../include/constants.h"
 
 
-
+// מבצע חילופים ראשוניים על הפלט
 static void initial_permutation(uint64_t data, uint64_t* permuted_data) {
 	int i;
 	int IP[] = {
@@ -25,6 +25,7 @@ static void initial_permutation(uint64_t data, uint64_t* permuted_data) {
 	}
 }
 
+// מבצע חילופים סופיים
 static void final_permutation(uint64_t data, uint64_t* permuted_data) {
 	int i;
 	int FP[] = {
@@ -45,16 +46,19 @@ static void final_permutation(uint64_t data, uint64_t* permuted_data) {
 	}
 }
 
+// מחלק את הבלוק לשני חצאיפ ושם אותם במצביעים
 static void split_blocks(uint64_t block, uint32_t* L, uint32_t* R) {
 	*R = block & RIGHT_HALF_BLOCK_ON;
 	*L = (block & LEFT_HALF_BLOCK_ON) >> HALF_BLOCK_SIZE_BITS;
 }
 
+// מקבל שני חצאי בלוק ושרשר אותם לבלוק אחד
 static void merge_blocks(uint32_t L, uint32_t R, uint64_t* block) {
 	*block = R;
 	*block |= (uint64_t)(L) << HALF_BLOCK_SIZE_BITS;
 }
 
+// מבצע חילופים על המפתח, ממיר את גודלו מ64 סיסיות ל56 סיביות
 static void permuted_choice_1(uint64_t key, uint64_t* permuted_key) {
 	int i;
 	int PC1[] = {
@@ -75,6 +79,7 @@ static void permuted_choice_1(uint64_t key, uint64_t* permuted_key) {
 	}
 }
 
+// ממיר מפתח בגודל 56 סיביות לתת מפתח בגודל 48 סיביות
 static void permuted_choice_2(uint64_t key, uint64_t* subkey) {
 	int i;
 	int PC2[] = {
@@ -95,11 +100,12 @@ static void permuted_choice_2(uint64_t key, uint64_t* subkey) {
 	}
 }
 
+// מבצע סיסוב מעגלי שמאלה
 static void left_shift(uint32_t* half_key, int shift_amount) {
 	*half_key = (*half_key << shift_amount) | (*half_key >> (HALF_KEY_SIZE_BITS - shift_amount));
 }
 
-
+// יוצר תתי מפתחות
 static void generate_subkeys(uint64_t key, uint64_t subkeys[16]) {
 	uint64_t permuted_key;
 	uint64_t combined_key;
@@ -124,6 +130,7 @@ static void generate_subkeys(uint64_t key, uint64_t subkeys[16]) {
 	}
 }
 
+// מרחיב את חצי הימני של הפלט מ32 סיביות ל48 סיביות
 static void expansion_function(uint32_t R, uint64_t* expanded_R) {
 	int i;
 	int E[] = {
@@ -142,6 +149,7 @@ static void expansion_function(uint32_t R, uint64_t* expanded_R) {
 	}
 }
 
+// מבצע החלפות לפי טבלאות הsbox
 static void s_box_substitution(uint64_t input, uint32_t* output, int S_BOX[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
 	uint8_t six_bits, row, col, s_box_value;
 	int i;
@@ -166,6 +174,7 @@ static void s_box_substitution(uint64_t input, uint32_t* output, int S_BOX[S_BOX
 	}
 }
 
+// מבצע חילופים לאחר השימוש בטבלאות SBOXES
 static void permutation_function(uint32_t data, uint32_t* permuted_data) {
 	int i;
 	int P[] = {
@@ -187,6 +196,7 @@ static void permutation_function(uint32_t data, uint32_t* permuted_data) {
 	}
 }
 
+//פונקצית פיסטל
 static void f_function(uint32_t R, uint64_t subkey, uint32_t* f_result, int S_BOX[S_BOXES_COUNT][S_BOXES_ROWS][S_BOXES_COLS]) {
 	uint64_t expanded_R;
 	uint32_t res;
@@ -198,6 +208,7 @@ static void f_function(uint32_t R, uint64_t subkey, uint32_t* f_result, int S_BO
 	*f_result = res;
 }
 
+/*פונקציה שמקבלת בלוק בגודל 64 סיביות, מפתח הצפנה בגודל 64 סיביות, מחזירה קלט מוצפן דרך מצביע*/
 void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 	uint32_t L, R, temp;
 	uint64_t subkeys[16];
@@ -223,6 +234,7 @@ void DES_encrypt(uint64_t plaintext, uint64_t* ciphertext, uint64_t key) {
 	final_permutation(plaintext, ciphertext);
 }
 
+/*פונקציה שמקבלת בלוק מוצפן בגודל 64 סיביות, מפתח הצפנה בגודל 64 סיביות, מחזירה קלט מפוענח דרך מצביע*/
 void DES_decrypt(uint64_t ciphertext, uint64_t* plaintext, uint64_t key) {
 	uint32_t L, R, temp;
 	uint64_t subkeys[16];

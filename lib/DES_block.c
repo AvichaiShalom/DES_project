@@ -46,7 +46,7 @@ static void final_permutation(uint64_t data, uint64_t* permuted_data) {
 	}
 }
 
-// מחלק את הבלוק לשני חצאיפ ושם אותם במצביעים
+// מחלק את הבלוק לשני חצאים ושם אותם במצביעים
 static void split_blocks(uint64_t block, uint32_t* L, uint32_t* R) {
 	*R = block & RIGHT_HALF_BLOCK_ON;
 	*L = (block & LEFT_HALF_BLOCK_ON) >> HALF_BLOCK_SIZE_BITS;
